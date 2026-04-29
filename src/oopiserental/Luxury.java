@@ -8,6 +8,14 @@ package oopiserental;
  *
  * @author murat
  */
-public class Luxury {
-    
+public class Luxury extends Vehicle{
+    public Luxury(String plate, String brand, double dailyRate) {
+        super(plate, brand, dailyRate);
+    }
+
+    @Override
+    public double calculateRent(int days) {
+        // Luxury araçlar için %50 konfor vergisi [cite: 65]
+        return dailyRate * days * 1.5;
+    }
 }

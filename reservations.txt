@@ -1,0 +1,1 @@
+ID: RES-001 | Müşteri: Murat | Araç: 35ABC123 | Tutar: 4800.0 TL

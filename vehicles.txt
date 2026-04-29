@@ -1,0 +1,2 @@
+SUV,35ABC123,Dacia Duster,1000.0
+Economy,35XYZ789,Renault Clio,500.0

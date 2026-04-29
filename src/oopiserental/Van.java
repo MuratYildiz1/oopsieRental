@@ -8,8 +8,13 @@ package oopiserental;
  *
  * @author murat
  */
-public class RentalException extends Exception{
-    public RentalException(String message) {
-        super(message);
+public class Van extends Vehicle{
+    public Van(String plate, String brand, double dailyRate) {
+        super(plate, brand, dailyRate);
+    }
+
+    @Override
+    public double calculateRent(int days) {
+        return dailyRate * days * 1.3;
     }
 }
