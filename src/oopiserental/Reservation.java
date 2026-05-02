@@ -35,14 +35,14 @@ public class Reservation {
         return baseAmount - discount;
     }
 
-    // Checks if the vehicle is available; throws custom exception if not[cite: 25]
+    // Checks if the vehicle is available; throws custom exception if not
     public void checkAvailability() throws RentalException {
         if (vehicle.isRented()) {
             throw new RentalException("Error: Selected vehicle (" + vehicle.getPlate() + ") is already rented!");
         }
     }
 
-    // Overriding toString to display reservation summary[cite: 25]
+    // Overriding toString to display reservation summary
     @Override
     public String toString() {
         return "ID: " + reservationId + " | Customer: " + customer.getName()
