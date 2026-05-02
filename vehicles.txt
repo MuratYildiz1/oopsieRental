@@ -1,2 +1,4 @@
-SUV,35ABC123,Dacia Duster,1000.0
-Economy,35XYZ789,Renault Clio,500.0
+SUV,35SUV01,Jeep Renegade,1200.0
+Economy,35ECO02,Fiat Egea,600.0
+Luxury,35LUX03,Mercedes C200,2500.0
+Van,35VAN04,Ford Transit,1000.0

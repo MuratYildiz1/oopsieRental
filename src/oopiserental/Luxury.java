@@ -9,13 +9,15 @@ package oopiserental;
  * @author murat
  */
 public class Luxury extends Vehicle{
+    
+    // Constructor calling the superclass (Vehicle) constructor
     public Luxury(String plate, String brand, double dailyRate) {
         super(plate, brand, dailyRate);
     }
 
+    // Method Overriding: adds 50% surcharge specifically for Luxury models
     @Override
     public double calculateRent(int days) {
-        // Luxury araçlar için %50 konfor vergisi [cite: 65]
         return dailyRate * days * 1.5;
     }
 }

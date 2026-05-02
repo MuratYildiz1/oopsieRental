@@ -10,24 +10,29 @@ package oopiserental;
  */
 public abstract class Vehicle implements Rentable {
 
+    // Encapsulation: private fields for data security
     private String plate;
     private String brand;
     protected double dailyRate;
     private boolean isRented;
 
+    // Abstract method to be implemented by specific vehicle types
     public abstract double calculateRent(int days);
 
+    // Constructor to set basic vehicle info
     public Vehicle(String plate, String brand, double dailyRate) {
         this.plate = plate;
         this.brand = brand;
         this.dailyRate = dailyRate;
     }
 
+    // Overloading: calculates rent with a percentage discount
     public double calculateRent(int days, double discountPercent) {
         double original = calculateRent(days);
         return original - (original * discountPercent / 100);
     }
 
+    // Getters and Setters for private fields
     public String getPlate() {
         return plate;
     }
@@ -44,15 +49,17 @@ public abstract class Vehicle implements Rentable {
         isRented = rented;
     }
 
+    // Implements rent method from Rentable interface
     @Override
     public void rent() {
         this.setRented(true);
-        System.out.println(plate + " plakalı araç kiralandı.");
+        System.out.println("Vehicle with plate " + plate + " has been rented.");
     }
 
+    // Implements returnVehicle method from Rentable interface
     @Override
     public void returnVehicle() {
         this.setRented(false);
-        System.out.println(plate + " plakalı araç iade edildi.");
+        System.out.println("Vehicle with plate " + plate + " has been returned.");
     }
 }

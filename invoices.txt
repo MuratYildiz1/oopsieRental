@@ -1,10 +1,11 @@
----------- RENT-A-CAR FATURASI ----------
-Fatura No: INV-2026-001
-Tarih: Wed Apr 29 23:34:08 GMT+03:00 2026
+
+---------- RENT-A-CAR INVOICE ----------
+Invoice No: INV-99
+Date: Sat May 02 21:32:12 GMT+03:00 2026
 -----------------------------------------
-ID: RES-001 | Müşteri: Murat | Araç: 35ABC123 | Tutar: 4800.0 TL
+ID: RES-5001 | Customer: Murat | Vehicle: 35SUV01 | Amount: 8064.0 USD
 -----------------------------------------
-İyi yolculuklar dileriz!
+Have a safe trip!
 
 =========================================
 

@@ -9,13 +9,14 @@ package oopiserental;
  * @author murat
  */
 public class Customer {
-
+    // Encapsulation: private fields to protect data from direct accessF
     private String id;
     private String name;
     private String surname;
     private String loyaltyTier;
     private int loyaltyPoints;
 
+    // Constructor to initialize a new customer with default Bronze tier
     public Customer(String id, String name, String surname) {
         this.id = id;
         this.name = name;
@@ -24,6 +25,7 @@ public class Customer {
         this.loyaltyPoints = 0;
     }
 
+    // Logic to return discount percentage based on loyalty tier
     public double getDiscountRate() {
         if (loyaltyTier.equalsIgnoreCase("Gold")) {
             return 0.20;

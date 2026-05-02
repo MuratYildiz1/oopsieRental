@@ -10,13 +10,14 @@ package oopiserental;
  */
 public class Economy extends Vehicle {
 
+    // Constructor calling the superclass (Vehicle) constructor
     public Economy(String plate, String brand, double dailyRate) {
         super(plate, brand, dailyRate); // Inheritance 
     }
 
+    // Method Overriding: economy does not have a different rate
     @Override
     public double calculateRent(int days) {
-        // Economy araçlarda ek ücret yok, direkt günlük oran [cite: 65]
         return dailyRate * days;
     }
 }
