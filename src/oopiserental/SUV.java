@@ -8,11 +8,14 @@ package oopiserental;
  *
  * @author murat
  */
-public class SUV extends Vehicle{
+public class SUV extends Vehicle {
+
+    // Constructor calling the superclass (Vehicle) constructor
     public SUV(String plate, String brand, double dailyRate) {
         super(plate, brand, dailyRate);
     }
 
+    // Method Overriding: adds 20% surcharge specifically for SUV models
     @Override
     public double calculateRent(int days) {
         return dailyRate * days * 1.2;

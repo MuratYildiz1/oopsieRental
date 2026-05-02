@@ -13,10 +13,12 @@ import java.util.*;
  */
 public class FileManager {
 
+    // Constant file names for data storage
     private static final String VEHICLE_FILE = "vehicles.txt";
     private static final String CUSTOMER_FILE = "customers.txt";
     private static final String RESERVATION_FILE = "reservations.txt";
 
+    // Overwrites the vehicle file with the current list of vehicles
     public static void saveVehicles(ArrayList<Vehicle> vehicles) {
         try (PrintWriter writer = new PrintWriter(new FileWriter(VEHICLE_FILE))) {
             for (Vehicle v : vehicles) {
@@ -24,26 +26,29 @@ public class FileManager {
                 writer.println(type + "," + v.getPlate() + "," + v.getBrand() + "," + v.dailyRate);
             }
         } catch (IOException e) {
-            System.err.println("Dosya yazma hatası: " + e.getMessage());
+            System.err.println("File writing error: " + e.getMessage());
         }
     }
 
+    // Appends a single customer record to the customer file[cite: 20]
     public static void saveCustomer(Customer c) {
         try (PrintWriter out = new PrintWriter(new FileWriter(CUSTOMER_FILE, true))) {
             out.println(c.getId() + "," + c.getName() + "," + c.getSurname() + "," + c.getLoyaltyTier());
         } catch (IOException e) {
-            System.err.println("Dosya yazma hatası: " + e.getMessage());
+            System.err.println("File writing error: " + e.getMessage());
         }
     }
 
+    // Records a reservation summary in the reservation history file
     public static void saveReservation(Reservation res) {
         try (PrintWriter out = new PrintWriter(new FileWriter(RESERVATION_FILE, true))) {
             out.println(res.toString());
         } catch (IOException e) {
-            System.err.println("Rezervasyon kaydı başarısız: " + e.getMessage());
+            System.err.println("Reservation recording failed: " + e.getMessage());
         }
     }
 
+    // Reads the customer file and returns an ArrayList of Customer objects
     public static ArrayList<Customer> loadCustomers() {
         ArrayList<Customer> list = new ArrayList<>();
         try (BufferedReader br = new BufferedReader(new FileReader(CUSTOMER_FILE))) {
@@ -55,19 +60,20 @@ public class FileManager {
                 list.add(c);
             }
         } catch (Exception e) {
-            System.out.println("Henüz kayıtlı müşteri yok veya dosya okunamadı.");
+            System.out.println("No registered customers yet or file could not be read.");
         }
         return list;
     }
-
+    
+    // Saves the full formatted invoice text to a file
     public static void saveInvoice(Invoice invoice) {
         String fileName = "invoices.txt";
         try (PrintWriter out = new PrintWriter(new FileWriter(fileName, true))) {
             out.println(invoice.getFormattedInvoice());
             out.println("=========================================\n");
-            System.out.println("Fatura başarıyla kaydedildi: " + fileName);
+            System.out.println("Invoice saved successfully: " + fileName);
         } catch (IOException e) {
-            System.err.println("Fatura yazma hatası: " + e.getMessage());
+            System.err.println("Invoice writing error: " + e.getMessage());
         }
     }
 }

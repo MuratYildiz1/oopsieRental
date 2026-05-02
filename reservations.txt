@@ -1,1 +1,1 @@
-ID: RES-001 | Müşteri: Murat | Araç: 35ABC123 | Tutar: 4800.0 TL
+ID: RES-5001 | Customer: Murat | Vehicle: 35SUV01 | Amount: 8064.0 USD
