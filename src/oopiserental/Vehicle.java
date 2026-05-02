@@ -15,6 +15,7 @@ public abstract class Vehicle implements Rentable {
     private String brand;
     protected double dailyRate;
     private boolean isRented;
+    private int rentedDays;
 
     // Abstract method to be implemented by specific vehicle types
     public abstract double calculateRent(int days);
@@ -24,6 +25,7 @@ public abstract class Vehicle implements Rentable {
         this.plate = plate;
         this.brand = brand;
         this.dailyRate = dailyRate;
+        this.rentedDays = 0;
     }
 
     // Overloading: calculates rent with a percentage discount
@@ -49,6 +51,14 @@ public abstract class Vehicle implements Rentable {
         isRented = rented;
     }
 
+    public int getRentedDays() {
+        return rentedDays;
+    }
+
+    public void setRentedDays(int rentedDays) {
+        this.rentedDays = rentedDays;
+    }
+
     // Implements rent method from Rentable interface
     @Override
     public void rent() {
@@ -61,5 +71,10 @@ public abstract class Vehicle implements Rentable {
     public void returnVehicle() {
         this.setRented(false);
         System.out.println("Vehicle with plate " + plate + " has been returned.");
+    }
+
+    @Override
+    public String toString() {
+        return brand + " (" + plate + ")";
     }
 }

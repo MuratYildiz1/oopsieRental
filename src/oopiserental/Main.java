@@ -11,7 +11,7 @@ import java.util.ArrayList;
  * @author murat
  */
 public class Main {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws RentalException {
         System.out.println("=== OOPSIETRACK PRO: SYSTEM INTEGRATION TEST ===\n");
 
         try {
@@ -39,7 +39,7 @@ public class Main {
             // Using the same method name with different parameters (days vs days+discount).
             // ---------------------------------------------------------
             System.out.println("Testing Method Overloading (Direct 10% Discount):");
-            double discountedPrice = eco.calculateRent(5, 10.0); 
+            double discountedPrice = eco.calculateRent(5, 10.0);
             System.out.println("Economy 5-day with manual 10% discount: " + discountedPrice + " USD\n");
 
             // ---------------------------------------------------------
@@ -65,7 +65,8 @@ public class Main {
             System.out.println("\n--- Testing Custom Exception Handling ---");
             try {
                 System.out.println("Attempting to rent the same SUV again...");
-                res.checkAvailability(); // This should trigger RentalException
+                // Create another reservation for the same vehicle (should fail)
+                new Reservation("RES-5002", murat, suv, 3);
             } catch (RentalException e) {
                 System.err.println("ALERT: " + e.getMessage());
             }
@@ -76,15 +77,18 @@ public class Main {
             // ---------------------------------------------------------
             System.out.println("\n--- Finalizing Data Persistence ---");
             ArrayList<Vehicle> inventory = new ArrayList<>();
-            inventory.add(suv); inventory.add(eco); inventory.add(lux); inventory.add(van);
-            
+            inventory.add(suv);
+            inventory.add(eco);
+            inventory.add(lux);
+            inventory.add(van);
+
             FileManager.saveVehicles(inventory); // Saves types and rates
-            FileManager.saveCustomer(murat);      // Appends to customers.txt
-            FileManager.saveReservation(res);    // Logs the transaction
-            
+            FileManager.saveCustomer(murat); // Appends to customers.txt
+            FileManager.saveReservation(res); // Logs the transaction
+
             Invoice invoice = new Invoice("INV-99", res);
-            FileManager.saveInvoice(invoice);    // Generates formatted .txt invoice
-            
+            FileManager.saveInvoice(invoice); // Generates formatted .txt invoice
+
             System.out.println("All data successfully synchronized to .txt files.");
             System.out.println("=== TEST COMPLETED SUCCESSFULLY ===");
 

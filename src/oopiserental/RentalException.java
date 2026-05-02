@@ -8,7 +8,7 @@ package oopiserental;
  *
  * @author murat
  */
-public class RentalException extends Exception{
+public class RentalException extends Exception {
     public RentalException(String message) {
         super(message);
     }

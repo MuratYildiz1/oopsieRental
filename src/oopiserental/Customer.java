@@ -9,7 +9,7 @@ package oopiserental;
  * @author murat
  */
 public class Customer {
-    // Encapsulation: private fields to protect data from direct accessF
+    // Encapsulation: private fields to protect data from direct access
     private String id;
     private String name;
     private String surname;
@@ -21,7 +21,7 @@ public class Customer {
         this.id = id;
         this.name = name;
         this.surname = surname;
-        this.loyaltyTier = "Bronze"; 
+        this.loyaltyTier = "Bronze";
         this.loyaltyPoints = 0;
     }
 
@@ -32,7 +32,7 @@ public class Customer {
         } else if (loyaltyTier.equalsIgnoreCase("Silver")) {
             return 0.10;
         }
-        return 0.0;  
+        return 0.0;
     }
 
     // Getters and Setters (Encapsulation)

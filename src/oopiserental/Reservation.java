@@ -18,13 +18,17 @@ public class Reservation {
     private double totalPrice;
 
     // Constructor calculates the final amount and marks the vehicle as rented
-    public Reservation(String reservationId, Customer customer, Vehicle vehicle, int days) {
+    public Reservation(String reservationId, Customer customer, Vehicle vehicle, int days) throws RentalException {
         this.reservationId = reservationId;
         this.customer = customer;
         this.vehicle = vehicle;
         this.days = days;
-        this.totalPrice = calculateFinalAmount();
 
+        // First check availability
+        checkAvailability();
+
+        // Then calculate and mark as rented
+        this.totalPrice = calculateFinalAmount();
         vehicle.setRented(true);
     }
 
@@ -35,14 +39,14 @@ public class Reservation {
         return baseAmount - discount;
     }
 
-    // Checks if the vehicle is available; throws custom exception if not
+    // Checks if the vehicle is available; throws custom exception if not[cite: 25]
     public void checkAvailability() throws RentalException {
         if (vehicle.isRented()) {
             throw new RentalException("Error: Selected vehicle (" + vehicle.getPlate() + ") is already rented!");
         }
     }
 
-    // Overriding toString to display reservation summary
+    // Overriding toString to display reservation summary[cite: 25]
     @Override
     public String toString() {
         return "ID: " + reservationId + " | Customer: " + customer.getName()

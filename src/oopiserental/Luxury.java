@@ -8,8 +8,8 @@ package oopiserental;
  *
  * @author murat
  */
-public class Luxury extends Vehicle{
-    
+public class Luxury extends Vehicle {
+
     // Constructor calling the superclass (Vehicle) constructor
     public Luxury(String plate, String brand, double dailyRate) {
         super(plate, brand, dailyRate);

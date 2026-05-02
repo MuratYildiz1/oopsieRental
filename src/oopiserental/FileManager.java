@@ -30,6 +30,42 @@ public class FileManager {
         }
     }
 
+    public static ArrayList<Vehicle> loadVehicles() {
+        ArrayList<Vehicle> list = new ArrayList<>();
+        try (BufferedReader br = new BufferedReader(new FileReader(VEHICLE_FILE))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                String[] data = line.split(",");
+                String type = data[0];
+                String plate = data[1];
+                String brand = data[2];
+                double dailyRate = Double.parseDouble(data[3]);
+
+                Vehicle v = null;
+                switch (type) {
+                    case "Economy":
+                        v = new Economy(plate, brand, dailyRate);
+                        break;
+                    case "SUV":
+                        v = new SUV(plate, brand, dailyRate);
+                        break;
+                    case "Luxury":
+                        v = new Luxury(plate, brand, dailyRate);
+                        break;
+                    case "Van":
+                        v = new Van(plate, brand, dailyRate);
+                        break;
+                }
+                if (v != null) {
+                    list.add(v);
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("No registered vehicles yet, or the file could not be read.");
+        }
+        return list;
+    }
+
     // Appends a single customer record to the customer file[cite: 20]
     public static void saveCustomer(Customer c) {
         try (PrintWriter out = new PrintWriter(new FileWriter(CUSTOMER_FILE, true))) {
@@ -64,7 +100,7 @@ public class FileManager {
         }
         return list;
     }
-    
+
     // Saves the full formatted invoice text to a file
     public static void saveInvoice(Invoice invoice) {
         String fileName = "invoices.txt";

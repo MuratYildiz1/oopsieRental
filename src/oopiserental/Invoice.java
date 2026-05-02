@@ -30,7 +30,7 @@ public class Invoice {
         sb.append("Invoice No: ").append(invoiceId).append("\n");
         sb.append("Date: ").append(generationDate.toString()).append("\n");
         sb.append("-----------------------------------------\n");
-        sb.append(reservation.toString()).append("\n"); // Calls reservation's summary
+        sb.append(reservation.toString()).append("\n"); // Calls reservation's summary[cite: 21]
         sb.append("-----------------------------------------\n");
         sb.append("Have a safe trip!\n");
         return sb.toString();
