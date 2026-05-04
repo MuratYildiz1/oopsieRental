@@ -2,3 +2,5 @@
 2,Kerem Halis,Kardes,Gold
 3,Mehmet,Kartop,Bronze
 4,Kamil,Elmas,Silver
+CST-01,Murat,Yildiz,Bronze
+CST-01,Murat,Yildiz,Bronze

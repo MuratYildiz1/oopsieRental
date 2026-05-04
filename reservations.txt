@@ -1,1 +1,6 @@
 ID: RES-5001 | Customer: Murat | Vehicle: 35SUV01 | Amount: 8064.0 USD
+ID: RES-1777757317841 | Customer: Murat | Vehicle: 35LG35 | Amount: 42000.0 USD
+ID: RES-1777757326776 | Customer: Murat | Vehicle: 35ECO02 | Amount: 2400.0 USD
+ID: RES-1777757666742 | Customer: Murat | Vehicle: 35LG35 | Amount: 25200.0 USD
+ID: RES-1777890255037 | Customer: Murat | Vehicle: 35LG35 | Amount: 8400.0 USD
+ID: RES-1777890606545 | Customer: Murat | Vehicle: 35SUV01 | Amount: 3456.0 USD

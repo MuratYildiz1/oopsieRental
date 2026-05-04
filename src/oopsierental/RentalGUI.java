@@ -3,7 +3,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 
-package oopiserental;
+package oopsierental;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -48,12 +48,20 @@ public class RentalGUI extends JFrame {
     }
 
     private void initData() {
+        ArrayList<Branch> branches = FileManager.loadBranches();
         // Fetch customers from file, if empty create sample customers
         customers = FileManager.loadCustomers();
+
+        if (branches.isEmpty()) {
+            branches.add(new Branch("BR01", "İzmir Center", "İzmir", "Bornova"));
+            FileManager.saveBranches(branches);
+        }
         if (customers.isEmpty()) {
             customers.add(new Customer("1", "Murat", "Yildiz"));
             customers.add(new Customer("2", "Kerem", "Güler"));
         }
+        this.vehicles = FileManager.loadVehicles(branches);
+        ArrayList<Employee> employees = FileManager.loadEmployees(branches);
 
         // Fetch vehicles from file, if empty create sample vehicles
         vehicles = FileManager.loadVehicles();

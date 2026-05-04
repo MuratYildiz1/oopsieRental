@@ -1,0 +1,2 @@
+RentalAgent,EMP-01,John Doe,jdoe,1234,BR-35
+Mechanic,EMP-02,Mike Smith,msmith,1234,BR-35

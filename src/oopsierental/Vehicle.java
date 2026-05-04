@@ -2,7 +2,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package oopiserental;
+package oopsierental;
 
 /**
  *
@@ -17,15 +17,22 @@ public abstract class Vehicle implements Rentable {
     private boolean isRented;
     private int rentedDays;
 
+    private Branch branch;
+    private boolean isUnderMaintenance;
+    private int mileage;
+
     // Abstract method to be implemented by specific vehicle types
     public abstract double calculateRent(int days);
 
     // Constructor to set basic vehicle info
-    public Vehicle(String plate, String brand, double dailyRate) {
+    public Vehicle(String plate, String brand, double dailyRate, Branch branch) {
         this.plate = plate;
         this.brand = brand;
         this.dailyRate = dailyRate;
-        this.rentedDays = 0;
+        this.branch = branch;
+        this.isRented = false;
+        this.isUnderMaintenance = false;
+        this.mileage = 0;
     }
 
     // Overloading: calculates rent with a percentage discount
@@ -57,6 +64,33 @@ public abstract class Vehicle implements Rentable {
 
     public void setRentedDays(int rentedDays) {
         this.rentedDays = rentedDays;
+    }
+
+    public Branch getBranch() {
+        return branch;
+    }
+    public double getDailyRate() {
+        return this.dailyRate;
+    }
+
+    public void setBranch(Branch branch) {
+        this.branch = branch;
+    }
+
+    public boolean isUnderMaintenance() {
+        return isUnderMaintenance;
+    }
+
+    public void setUnderMaintenance(boolean underMaintenance) {
+        isUnderMaintenance = underMaintenance;
+    }
+
+    public int getMileage() {
+        return mileage;
+    }
+
+    public void addMileage(int km) {
+        this.mileage += km;
     }
 
     // Implements rent method from Rentable interface

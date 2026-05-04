@@ -49,3 +49,87 @@ Have a safe trip!
 
 =========================================
 
+---------- RENT-A-CAR INVOICE ----------
+Invoice No: INV-1777757317841
+Date: Sun May 03 00:28:37 EET 2026
+-----------------------------------------
+ID: RES-1777757317841 | Customer: Murat | Vehicle: 35LG35 | Amount: 42000.0 USD
+-----------------------------------------
+Have a safe trip!
+
+=========================================
+
+---------- RENT-A-CAR INVOICE ----------
+Invoice No: INV-1777757326776
+Date: Sun May 03 00:28:46 EET 2026
+-----------------------------------------
+ID: RES-1777757326776 | Customer: Murat | Vehicle: 35ECO02 | Amount: 2400.0 USD
+-----------------------------------------
+Have a safe trip!
+
+=========================================
+
+---------- RENT-A-CAR INVOICE ----------
+Invoice No: INV-1777757666758
+Date: Sun May 03 00:34:26 EET 2026
+-----------------------------------------
+ID: RES-1777757666742 | Customer: Murat | Vehicle: 35LG35 | Amount: 25200.0 USD
+-----------------------------------------
+Have a safe trip!
+
+=========================================
+
+---------- RENT-A-CAR INVOICE ----------
+Invoice No: INV-1777890255037
+Date: Mon May 04 13:24:15 EET 2026
+-----------------------------------------
+ID: RES-1777890255037 | Customer: Murat | Vehicle: 35LG35 | Amount: 8400.0 USD
+-----------------------------------------
+Have a safe trip!
+
+=========================================
+
+---------- RENT-A-CAR INVOICE ----------
+Invoice No: INV-1777890606548
+Date: Mon May 04 13:30:06 EET 2026
+-----------------------------------------
+ID: RES-1777890606545 | Customer: Murat | Vehicle: 35SUV01 | Amount: 3456.0 USD
+-----------------------------------------
+Have a safe trip!
+
+=========================================
+
+---------- RENT-A-CAR INVOICE ----------
+Invoice No: INV-1777897836654
+Date: Mon May 04 15:30:36 EET 2026
+-----------------------------------------
+ID: RES-001 | Customer: Murat | Vehicle: 35-ABC-123 | Amount: 2500.0 USD
+-----------------------------------------
+Rental Days : 5 days
+Base Rent   : 2500.0 TL
+ (Includes Full Coverage Insurance)
+DAMAGE FEE  : 3000.0 TL (Damage Assessment Applied)
+-----------------------------------------
+TOTAL AMOUNT: 5500.0 TL
+-----------------------------------------
+Have a safe trip!
+
+=========================================
+
+---------- RENT-A-CAR INVOICE ----------
+Invoice No: INV-1777898062934
+Date: Mon May 04 15:34:22 EET 2026
+-----------------------------------------
+ID: RES-001 | Customer: Murat | Vehicle: 35-ABC-123 | Amount: 3250.0 TL
+-----------------------------------------
+Rental Days : 5 days
+Base Rent   : 2500.0 TL
+ (Includes Full Coverage Insurance)
+DAMAGE FEE  : 3000.0 TL (Damage Assessment Applied)
+-----------------------------------------
+TOTAL AMOUNT: 5500.0 TL
+-----------------------------------------
+Have a safe trip!
+
+=========================================
+
