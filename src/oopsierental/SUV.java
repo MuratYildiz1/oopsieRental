@@ -1,5 +1,10 @@
 package oopsierental;
 
+/**
+ * @author MuratYildiz1
+ * @author KeremHKardes
+ */
+
 public class SUV extends Vehicle {
 
     public SUV(String plate, String brand, double dailyRate, Branch branch) {

@@ -1,5 +1,10 @@
 package oopsierental;
 
+/**
+ * @author MuratYildiz1
+ * @author KeremHKardes
+ */
+
 public class Economy extends Vehicle {
 
     public Economy(String plate, String brand, double dailyRate, Branch branch) {

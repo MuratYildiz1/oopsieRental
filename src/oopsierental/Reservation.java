@@ -1,5 +1,10 @@
 package oopsierental;
 
+/**
+ * @author MuratYildiz1
+ * @author KeremHKardes
+ */
+
 public class Reservation {
 
     private String reservationId;

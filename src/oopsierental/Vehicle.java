@@ -1,5 +1,10 @@
 package oopsierental;
 
+/**
+ * @author MuratYildiz1
+ * @author KeremHKardes
+ */
+
 public abstract class Vehicle implements Rentable {
 
     private String plate;

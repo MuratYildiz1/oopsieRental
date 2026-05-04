@@ -1,5 +1,10 @@
 package oopsierental;
 
+/**
+ * @author MuratYildiz1
+ * @author KeremHKardes
+ */
+
 public class Van extends Vehicle {
 
     public Van(String plate, String brand, double dailyRate, Branch branch) {

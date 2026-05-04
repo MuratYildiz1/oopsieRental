@@ -1,5 +1,10 @@
 package oopsierental;
 
+/**
+ * @author MuratYildiz1
+ * @author KeremHKardes
+ */
+
 public class RentalAgent extends Employee {
 
     public RentalAgent(String employeeId, String fullName, String username, String password, Branch branch) {

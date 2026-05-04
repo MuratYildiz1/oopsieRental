@@ -1,5 +1,10 @@
 package oopsierental;
 
+/**
+ * @author MuratYildiz1
+ * @author KeremHKardes
+ */
+
 import javax.swing.*;
 import java.awt.*;
 import com.formdev.flatlaf.FlatDarkLaf;
