@@ -1,8 +1,8 @@
 package oopsierental;
 
 public class BranchManager extends Employee {
-    public BranchManager(String id, String name, String user, String pass, Branch branch) {
-        super(id, name, user, pass, branch);
+    public BranchManager(String employeeId, String fullName, String username, String password, Branch branch) {
+        super(employeeId, fullName, username, password, branch);
     }
 
     @Override

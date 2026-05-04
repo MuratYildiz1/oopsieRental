@@ -8,7 +8,6 @@ public class Reservation {
     private int days;
     private double totalPrice;
 
-    // Updated field names for the "Per Day" logic
     private String insuranceType;
     private double insuranceDailyCost;
     private String pickUpLocation;
@@ -41,12 +40,10 @@ public class Reservation {
 
     private double calculateFinalAmount() {
         double baseRent = vehicle.calculateRent(days);
-        // NEW FORMULA: (Daily Rate * Days) + (Insurance Daily Cost * Days) + Fixed 5000
-        // TL Deposit
+        // Final amount: Base Rent + Insurance + Deposit
         return baseRent + (insuranceDailyCost * days) + DEPOSIT_AMOUNT;
     }
 
-    // Getters
     public String getReservationId() {
         return reservationId;
     }

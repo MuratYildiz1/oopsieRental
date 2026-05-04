@@ -1,16 +1,7 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package oopsierental;
 
-/**
- *
- * @author murat
- */
 public abstract class Vehicle implements Rentable {
 
-    // Encapsulation: private fields for data security
     private String plate;
     private String brand;
     protected double dailyRate;
@@ -21,10 +12,8 @@ public abstract class Vehicle implements Rentable {
     private boolean isUnderMaintenance;
     private int mileage;
 
-    // Abstract method to be implemented by specific vehicle types
     public abstract double calculateRent(int days);
 
-    // Constructor to set basic vehicle info
     public Vehicle(String plate, String brand, double dailyRate, Branch branch) {
         this.plate = plate;
         this.brand = brand;
@@ -35,13 +24,11 @@ public abstract class Vehicle implements Rentable {
         this.mileage = 0;
     }
 
-    // Overloading: calculates rent with a percentage discount
     public double calculateRent(int days, double discountPercent) {
         double original = calculateRent(days);
         return original - (original * discountPercent / 100);
     }
 
-    // Getters and Setters for private fields
     public String getPlate() {
         return plate;
     }
@@ -55,7 +42,7 @@ public abstract class Vehicle implements Rentable {
     }
 
     public void setRented(boolean rented) {
-        isRented = rented;
+        this.isRented = rented;
     }
 
     public int getRentedDays() {
@@ -69,6 +56,7 @@ public abstract class Vehicle implements Rentable {
     public Branch getBranch() {
         return branch;
     }
+
     public double getDailyRate() {
         return this.dailyRate;
     }
@@ -82,7 +70,7 @@ public abstract class Vehicle implements Rentable {
     }
 
     public void setUnderMaintenance(boolean underMaintenance) {
-        isUnderMaintenance = underMaintenance;
+        this.isUnderMaintenance = underMaintenance;
     }
 
     public int getMileage() {
@@ -93,14 +81,12 @@ public abstract class Vehicle implements Rentable {
         this.mileage += km;
     }
 
-    // Implements rent method from Rentable interface
     @Override
     public void rent() {
         this.setRented(true);
         System.out.println("Vehicle with plate " + plate + " has been rented.");
     }
 
-    // Implements returnVehicle method from Rentable interface
     @Override
     public void returnVehicle() {
         this.setRented(false);

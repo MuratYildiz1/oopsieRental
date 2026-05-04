@@ -12,7 +12,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.PrintWriter;
-import java.lang.reflect.Method;
+import com.formdev.flatlaf.FlatDarkLaf;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -24,21 +24,19 @@ public class RentalGUI extends JFrame {
 
     private String loggedInEmployeeName;
 
-    // Core Data
     private ArrayList<Customer> customers;
     private ArrayList<Vehicle> vehicles;
     private ArrayList<Branch> branches;
     private List<Vehicle> displayedVehicles;
     private List<Reservation> activeReservations;
 
-    // GUI Caches (for non-database fields)
+    // GUI Caches
     private Map<String, String> unavailableReasons = new HashMap<>();
     private Map<String, String> assignedMechanics = new HashMap<>();
     private Map<String, String> lastRentedBy = new HashMap<>();
     private Map<String, String> reservedByEmployee = new HashMap<>();
     private Map<String, String> unavailableAddedBy = new HashMap<>();
 
-    // Maintenance History Log Structure
     static class MaintenanceRecord {
         String plate, brand, reason, mechanic, notes, admin;
 
@@ -55,13 +53,11 @@ public class RentalGUI extends JFrame {
 
     private List<MaintenanceRecord> maintenanceHistory = new ArrayList<>();
 
-    // GUI Components
     private JTabbedPane tabbedPane;
     private JTable carListTable, unavailableTable, rentedTable;
     private JComboBox<String> categoryFilterCombo, priceSortCombo, cityFilterCombo, returnReservationCombo;
     private JLabel statusLabel;
 
-    // Return Panel Components
     private JLabel retCarLbl, retDaysLbl, retPickupLbl, retDropoffLbl, retInsuranceLbl, retDepositLbl;
     private JCheckBox washingCheck, missingObjectCheck;
 
@@ -80,9 +76,7 @@ public class RentalGUI extends JFrame {
 
     private void setLookAndFeel() {
         try {
-            Class<?> flatLafClass = Class.forName("com.formdev.flatlaf.FlatLightLaf");
-            Method setup = flatLafClass.getMethod("setup");
-            setup.invoke(null);
+            FlatDarkLaf.setup();
         } catch (Exception ignored) {
             try {
                 UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
@@ -118,7 +112,7 @@ public class RentalGUI extends JFrame {
                 }
             }
         } catch (Exception e) {
-            // File might not exist yet, which is fine.
+            // Safe to ignore if file does not exist yet.
         }
     }
 
@@ -161,9 +155,6 @@ public class RentalGUI extends JFrame {
         add(tabbedPane, BorderLayout.CENTER);
     }
 
-    // ==========================================
-    // TAB 1: CAR LIST
-    // ==========================================
     private JPanel createCarListPanel() {
         JPanel panel = new JPanel(new BorderLayout(10, 10));
         panel.setBorder(new EmptyBorder(10, 10, 10, 10));
@@ -352,6 +343,7 @@ public class RentalGUI extends JFrame {
 
         confirmBtn.addActionListener(e -> {
             try {
+                // Capture customer details from the GUI inputs
                 Customer cust = new Customer(idField.getText(), nameField.getText(), surnameField.getText(),
                         "user@mail.com", "123");
                 int days = Integer.parseInt(daysField.getText());
@@ -363,19 +355,27 @@ public class RentalGUI extends JFrame {
                         : (insuranceCombo.getSelectedIndex() == 1 ? 700 : 1200);
                 String returnCity = (String) returnCityCombo.getSelectedItem();
 
+                // Create the reservation
                 Reservation res = new Reservation("RES-" + System.currentTimeMillis(), cust, vehicle, days, insType,
                         insDailyCost, returnCity);
 
+                // Update active tracking lists
                 activeReservations.add(res);
                 lastRentedBy.put(vehicle.getPlate(), cust.getName() + " " + cust.getSurname());
                 reservedByEmployee.put(res.getReservationId(), loggedInEmployeeName);
 
+                // ---> VITAL FIX: Add customer to the list and save them to customers.txt <---
+                customers.add(cust);
+                FileManager.saveCustomer(cust);
+
+                // Save other relevant data to files
                 FileManager.saveReservation(res);
                 FileManager.saveVehicles(vehicles);
 
                 dialog.dispose();
                 refreshAllTables();
-                JOptionPane.showMessageDialog(this, "Payment received. Vehicle successfully rented!");
+                JOptionPane.showMessageDialog(this,
+                        "Payment received. Vehicle rented and Customer saved successfully!");
 
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(dialog, "Error processing rental: " + ex.getMessage());
@@ -385,9 +385,6 @@ public class RentalGUI extends JFrame {
         dialog.setVisible(true);
     }
 
-    // ==========================================
-    // TAB 2: UNAVAILABLE CARS (UPDATED)
-    // ==========================================
     private JPanel createUnavailablePanel() {
         JPanel panel = new JPanel(new BorderLayout(10, 10));
         panel.setBorder(new EmptyBorder(10, 10, 10, 10));
@@ -422,7 +419,8 @@ public class RentalGUI extends JFrame {
     }
 
     private void updateUnavailableTable() {
-        String[] cols = { "Plate", "Brand", "Reason", "Current Renter", "Mechanic", "Added By" };
+        // Updated column header to "Renter"
+        String[] cols = { "Plate", "Brand", "Reason", "Renter", "Mechanic", "Added By" };
         DefaultTableModel model = new DefaultTableModel(cols, 0) {
             @Override
             public boolean isCellEditable(int r, int c) {
@@ -436,27 +434,25 @@ public class RentalGUI extends JFrame {
                 String mechanic = assignedMechanics.getOrDefault(v.getPlate(), "Pending");
                 String admin = unavailableAddedBy.getOrDefault(v.getPlate(), "System");
 
-                String currentRenter = "-";
-                if (v.isRented()) {
-                    currentRenter = lastRentedBy.getOrDefault(v.getPlate(), "Unknown");
-                }
+                // VITAL FIX: Fetch the renter's name even if the vehicle is no longer actively
+                // "rented" due to the crash
+                String renter = lastRentedBy.getOrDefault(v.getPlate(), "-");
 
-                model.addRow(new Object[] { v.getPlate(), v.getBrand(), reason, currentRenter, mechanic, admin });
+                model.addRow(new Object[] { v.getPlate(), v.getBrand(), reason, renter, mechanic, admin });
             }
         }
         unavailableTable.setModel(model);
     }
 
     private void openAddUnavailableCarDialog() {
-        // Dialog penceresinin boyutunu daha geniş ve uzun yaptık ki sonuçlar rahatça
-        // sığsın
         JDialog dialog = new JDialog(this, "Add Vehicle to Unavailable", true);
         dialog.setSize(550, 500);
         dialog.setLayout(new GridBagLayout());
         dialog.setLocationRelativeTo(this);
+
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(10, 10, 10, 10);
-        gbc.fill = GridBagConstraints.BOTH; // Komponentlerin alanı doldurmasını sağladık
+        gbc.fill = GridBagConstraints.BOTH;
         gbc.weightx = 1.0;
 
         JTextField searchField = new JTextField(20);
@@ -464,16 +460,22 @@ public class RentalGUI extends JFrame {
         JList<Vehicle> resultList = new JList<>(listModel);
         resultList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
-        // JScrollPane (kaydırma çubuğu ve liste alanı) boyutunu belirgin şekilde
-        // büyüttük
         JScrollPane listScroll = new JScrollPane(resultList);
         listScroll.setPreferredSize(new Dimension(450, 150));
-        gbc.weighty = 1.0; // Listenin dikeyde genişleyebilmesine izin verdik
+        gbc.weighty = 1.0;
 
         JComboBox<String> reasonCombo = new JComboBox<>(new String[] { "Crash", "Maintenance" });
-        JTextField mechanicField = new JTextField(15);
 
-        // Search Logic
+        List<String> mechanics = FileManager.loadEmployees(branches).stream()
+                .filter(emp -> emp instanceof Mechanic)
+                .map(Employee::getName)
+                .collect(Collectors.toList());
+
+        if (mechanics.isEmpty())
+            mechanics.add("No Mechanic Assigned");
+
+        JComboBox<String> mechanicCombo = new JComboBox<>(mechanics.toArray(new String[0]));
+
         searchField.getDocument().addDocumentListener(new DocumentListener() {
             private void filter() {
                 String text = searchField.getText().toLowerCase();
@@ -507,7 +509,7 @@ public class RentalGUI extends JFrame {
         });
 
         int y = 0;
-        gbc.weighty = 0; // Etiketler için esnemeyi kapattık
+        gbc.weighty = 0;
         gbc.gridx = 0;
         gbc.gridy = y;
         dialog.add(new JLabel("Search (Plate, Model, Renter):"), gbc);
@@ -515,10 +517,10 @@ public class RentalGUI extends JFrame {
         dialog.add(searchField, gbc);
 
         gbc.gridy = ++y;
-        gbc.weighty = 1.0; // Sadece liste alanı esneyecek
+        gbc.weighty = 1.0;
         dialog.add(listScroll, gbc);
 
-        gbc.weighty = 0; // Diğer inputlar için esnemeyi kapattık
+        gbc.weighty = 0;
         gbc.gridy = ++y;
         dialog.add(new JLabel("Reason of Unavailability:"), gbc);
         gbc.gridy = ++y;
@@ -526,12 +528,12 @@ public class RentalGUI extends JFrame {
         gbc.gridy = ++y;
         dialog.add(new JLabel("Responsible Mechanic:"), gbc);
         gbc.gridy = ++y;
-        dialog.add(mechanicField, gbc);
+        dialog.add(mechanicCombo, gbc);
 
         JButton addBtn = new JButton("Add to List");
         gbc.gridy = ++y;
-        gbc.fill = GridBagConstraints.NONE; // Butonun tam satırı kaplamaması için
-        gbc.anchor = GridBagConstraints.CENTER; // Butonu ortaladık
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.anchor = GridBagConstraints.CENTER;
         dialog.add(addBtn, gbc);
 
         addBtn.addActionListener(e -> {
@@ -540,12 +542,15 @@ public class RentalGUI extends JFrame {
                 JOptionPane.showMessageDialog(dialog, "Please select a vehicle from the list.");
                 return;
             }
-            if (mechanicField.getText().trim().isEmpty()) {
-                JOptionPane.showMessageDialog(dialog, "Please enter the mechanic's name.");
+
+            String selectedMechanic = (String) mechanicCombo.getSelectedItem();
+            if (selectedMechanic == null || selectedMechanic.equals("No Mechanic Assigned")
+                    || selectedMechanic.trim().isEmpty()) {
+                JOptionPane.showMessageDialog(dialog, "Please select a valid mechanic.");
                 return;
             }
 
-            // Eğer araç "Rented" durumundaysa aktif rezervasyonu bul ve iptal et
+            // Terminate active reservation if the vehicle is currently rented.
             if (selected.isRented()) {
                 Reservation resToRemove = null;
                 for (Reservation r : activeReservations) {
@@ -558,21 +563,18 @@ public class RentalGUI extends JFrame {
                 if (resToRemove != null) {
                     activeReservations.remove(resToRemove);
                     reservedByEmployee.remove(resToRemove.getReservationId());
-                    // Kullanıcıya bilgi veriyoruz
                     JOptionPane.showMessageDialog(dialog,
                             "Warning: This vehicle was currently rented. Its active reservation has been terminated due to unavailability.",
                             "Reservation Terminated", JOptionPane.WARNING_MESSAGE);
                 }
-
-                // Aracın kiralık durumunu sıfırla
                 selected.setRented(false);
                 selected.setRentedDays(0);
             }
 
-            // Aracı bakıma al ve detayları kaydet
+            // Set vehicle to maintenance and log details.
             selected.setUnderMaintenance(true);
             unavailableReasons.put(selected.getPlate(), (String) reasonCombo.getSelectedItem());
-            assignedMechanics.put(selected.getPlate(), mechanicField.getText().trim());
+            assignedMechanics.put(selected.getPlate(), selectedMechanic);
             unavailableAddedBy.put(selected.getPlate(), loggedInEmployeeName);
 
             FileManager.saveVehicles(vehicles);
@@ -580,7 +582,6 @@ public class RentalGUI extends JFrame {
             refreshAllTables();
         });
 
-        // Initialize empty list
         searchField.setText("");
         dialog.setVisible(true);
     }
@@ -610,16 +611,17 @@ public class RentalGUI extends JFrame {
             if (notes.isEmpty())
                 notes = "No notes provided.";
 
-            // Save to history
             MaintenanceRecord record = new MaintenanceRecord(plate, brand, reason, mechanic, notes,
                     loggedInEmployeeName);
             saveMaintenanceRecord(record);
 
-            // Remove from unavailable
             vehicle.setUnderMaintenance(false);
             unavailableReasons.remove(plate);
             assignedMechanics.remove(plate);
             unavailableAddedBy.remove(plate);
+
+            // VITAL FIX: Remove the crasher's name from memory once the vehicle is fixed
+            lastRentedBy.remove(plate);
 
             FileManager.saveVehicles(vehicles);
             refreshAllTables();
@@ -649,9 +651,6 @@ public class RentalGUI extends JFrame {
         dialog.setVisible(true);
     }
 
-    // ==========================================
-    // TAB 3: RENTED
-    // ==========================================
     private JPanel createRentedPanel() {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBorder(new EmptyBorder(10, 10, 10, 10));
@@ -669,7 +668,7 @@ public class RentalGUI extends JFrame {
             }
         };
 
-        // Tarih formatımızı "01.01.2026" şeklinde ayarlıyoruz
+        // Format dates as dd.MM.yyyy
         java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy");
 
         for (Reservation res : activeReservations) {
@@ -677,20 +676,15 @@ public class RentalGUI extends JFrame {
             if (v.isRented()) {
                 String carInfo = v.getBrand() + " (" + v.getPlate() + ")";
                 String cust = res.getCustomer().getName() + " " + res.getCustomer().getSurname();
-
-                String daysStr = res.getDays() + " Days Total"; // Hata durumunda varsayılan metin
+                String daysStr = res.getDays() + " Days Total";
 
                 try {
-                    // ID'nin içindeki milisaniyeyi (örneğin RES-17000000000) çekiyoruz
+                    // Extract timestamp from reservation ID
                     String[] parts = res.getReservationId().split("-");
                     if (parts.length > 1) {
                         long timestamp = Long.parseLong(parts[1]);
-
-                        // Convert millisecond to LocalDate
                         java.time.Instant instant = java.time.Instant.ofEpochMilli(timestamp);
                         java.time.LocalDate startDate = instant.atZone(java.time.ZoneId.systemDefault()).toLocalDate();
-
-                        // Adding the number of days to the start date to get the return date
                         java.time.LocalDate returnDate = startDate.plusDays(res.getDays());
 
                         daysStr = res.getDays() + " (Return: " + returnDate.format(formatter) + ")";
@@ -700,16 +694,12 @@ public class RentalGUI extends JFrame {
                 }
 
                 String employeeName = reservedByEmployee.getOrDefault(res.getReservationId(), loggedInEmployeeName);
-
                 model.addRow(new Object[] { carInfo, cust, daysStr, employeeName });
             }
         }
         rentedTable.setModel(model);
     }
 
-    // ==========================================
-    // TAB 4: RETURN & LOCATION UPDATE FIX
-    // ==========================================
     private JPanel createReturnPanel() {
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBorder(BorderFactory.createTitledBorder("Process Vehicle Return"));
@@ -844,7 +834,6 @@ public class RentalGUI extends JFrame {
         JOptionPane.showMessageDialog(this, inv.getFormattedInvoice(), "Return & Invoice Summary",
                 JOptionPane.INFORMATION_MESSAGE);
 
-        // VITAL FEATURE: Update the car's branch to the drop-off location
         String dropoffCity = res.getReturnLocation();
         for (Branch b : branches) {
             if (b.getCity().equalsIgnoreCase(dropoffCity)) {
@@ -858,6 +847,9 @@ public class RentalGUI extends JFrame {
         activeReservations.remove(idx);
         reservedByEmployee.remove(res.getReservationId());
 
+        // VITAL FIX: Remove the renter from memory since the car was returned safely
+        lastRentedBy.remove(vehicle.getPlate());
+
         FileManager.saveVehicles(vehicles);
         refreshAllTables();
     }
@@ -867,12 +859,5 @@ public class RentalGUI extends JFrame {
         updateUnavailableTable();
         updateRentedTable();
         populateReturnCombo();
-    }
-
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            RentalGUI gui = new RentalGUI();
-            gui.setVisible(true);
-        });
     }
 }

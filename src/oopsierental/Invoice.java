@@ -15,8 +15,8 @@ public class Invoice {
         this.invoiceId = invoiceId;
         this.reservation = reservation;
         this.generationDate = new Date();
-
         this.totalDeductions = 0;
+
         StringBuilder details = new StringBuilder();
 
         if (hasWashingFee) {
@@ -33,7 +33,7 @@ public class Invoice {
         }
         this.deductionDetails = details.toString();
 
-        // Calculate how much of the 5000 TL deposit goes back to the customer
+        // Calculate final refund from the initial deposit
         this.finalRefund = reservation.getDepositAmount() - this.totalDeductions;
     }
 

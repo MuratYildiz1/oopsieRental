@@ -1,31 +1,34 @@
 ```mermaid
 
-
 flowchart LR
-    %% Actor
-    Admin[System Admin]
+    agent[Rental Agent]
+    mechanic[Mechanic]
+    admin[System Admin / Manager]
 
-    %% System
-    subgraph Rental_System_Management
-        UC1((Login & Authentication))
-        UC2((Manage Fleet\nFilter/Sort))
-        UC3((Rent Vehicle\nCalc Price + Insurance))
-        UC4((Process Return\nUpdate Location))
-        UC5((Handle Vehicle Failure\nManual Add))
-        UC6((Log Mechanic Notes))
-        UC7((Monitor Maintenance History))
-        UC8((Generate Refund Invoice))
+    subgraph OOPSIE_RENTAL_SYSTEM
+        UC1((Login / Register))
+        UC2((View Cars & Apply Filters))
+        UC3((Create Reservation Rent))
+        UC4((Process Return & Generate Invoice))
+        UC5((Send Car to Maintenance))
+        UC6((Resolve Maintenance Add Notes))
+        UC7((View Maintenance History))
+        UC8((Calculate Deductions & Refund))
     end
 
-    %% Relationships
-    Admin --> UC1
-    Admin --> UC2
-    Admin --> UC3
-    Admin --> UC4
-    Admin --> UC5
-    Admin --> UC7
+    agent --> UC1
+    agent --> UC2
+    agent --> UC3
+    agent --> UC4
+    agent --> UC5
 
-    %% Include / Extend relations
-    UC4 -.->|<<include>>| UC8
-    UC5 -.->|<<include>>| UC6
-    UC7 -.->|<<uses>>| UC6
+    mechanic --> UC1
+    mechanic --> UC2
+    mechanic --> UC6
+    mechanic --> UC7
+
+    admin --> UC1
+    admin --> UC2
+    admin --> UC7
+
+    UC4 -.->|<<includes>>| UC8

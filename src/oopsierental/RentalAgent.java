@@ -2,8 +2,8 @@ package oopsierental;
 
 public class RentalAgent extends Employee {
 
-    public RentalAgent(String id, String name, String user, String pass, Branch branch) {
-        super(id, name, user, pass, branch);
+    public RentalAgent(String employeeId, String fullName, String username, String password, Branch branch) {
+        super(employeeId, fullName, username, password, branch);
     }
 
     @Override
@@ -11,11 +11,10 @@ public class RentalAgent extends Employee {
         return "Limited Access: Create Reservations, Process Pick-ups/Returns";
     }
 
-    // YENI MANTIK: Artık gün sayısı veya double hasar yerine, boolean kesintileri
-    // alıyor.
+    // Processes vehicle return using boolean penalty flags instead of manual
+    // calculations
     public Invoice processReturn(Reservation reservation, int drivenKm, boolean hasDamage, boolean hasWashingFee,
             boolean hasMissingObject) {
-
         Vehicle vehicle = reservation.getVehicle();
         vehicle.addMileage(drivenKm);
 
@@ -29,8 +28,6 @@ public class RentalAgent extends Employee {
         vehicle.setRentedDays(0);
 
         String generatedInvoiceId = "INV-" + System.currentTimeMillis();
-
-        // PARAMETRELER YENI INVOICE SINIFINA UYGUN HALE GETIRILDI
         Invoice finalInvoice = new Invoice(generatedInvoiceId, reservation, hasWashingFee, hasMissingObject);
 
         return finalInvoice;

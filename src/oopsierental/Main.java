@@ -11,6 +11,5 @@ public class Main {
             LoginGUI loginScreen = new LoginGUI();
             loginScreen.setVisible(true);
         });
-
     }
 }

@@ -1,2 +1,3 @@
-11111111111,Murat,Yildiz,muratyildiz35@gmail.com,123,Gold
-12345678910,Kerem Halis,Kardes,keremkardes35@gmail.com,123,Bronze
+12498482348,Cabbar,Cetinkaya,user@mail.com,123,Bronze
+13523864399,Mehmet,Yemez,user@mail.com,123,Bronze
+38291948328,Selin,Pekmez,user@mail.com,123,Bronze

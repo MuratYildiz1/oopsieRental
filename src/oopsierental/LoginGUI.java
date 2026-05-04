@@ -2,7 +2,7 @@ package oopsierental;
 
 import javax.swing.*;
 import java.awt.*;
-import com.formdev.flatlaf.FlatLightLaf;
+import com.formdev.flatlaf.FlatDarkLaf;
 
 public class LoginGUI extends JFrame {
 
@@ -11,22 +11,13 @@ public class LoginGUI extends JFrame {
     private JButton loginButton;
     private JButton registerButton;
 
-    // Register fields
-    private JTextField customerIdField;
-    private JTextField nameField;
-    private JTextField surnameField;
-    private JTextField registerEmailField;
-    private JPasswordField setPasswordField;
-    private JButton submitRegisterButton;
-    private JButton backButton;
-
     private JPanel loginPanel;
     private JPanel registerPanel;
 
     public LoginGUI() {
         setLookAndFeel();
         setTitle("OOPSIE RENTAL - Login");
-        setSize(500, 400);
+        setSize(500, 450);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setLayout(new CardLayout());
@@ -42,9 +33,13 @@ public class LoginGUI extends JFrame {
 
     private void setLookAndFeel() {
         try {
-            UIManager.setLookAndFeel(new FlatLightLaf());
+            FlatDarkLaf.setup();
         } catch (Exception e) {
-            e.printStackTrace();
+            try {
+                UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
+            } catch (Exception ex) {
+                // Fallback handled implicitly
+            }
         }
     }
 
@@ -58,7 +53,7 @@ public class LoginGUI extends JFrame {
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.gridwidth = 2;
-        loginPanel.add(new JLabel("Email Address:"), gbc);
+        loginPanel.add(new JLabel("Username / Email:"), gbc);
 
         emailField = new JTextField(20);
         gbc.gridy = 1;
@@ -76,7 +71,7 @@ public class LoginGUI extends JFrame {
         gbc.gridwidth = 1;
         loginPanel.add(loginButton, gbc);
 
-        registerButton = new JButton("Register");
+        registerButton = new JButton("Register Employee");
         gbc.gridx = 1;
         loginPanel.add(registerButton, gbc);
 
@@ -86,130 +81,137 @@ public class LoginGUI extends JFrame {
 
     private void createRegisterPanel() {
         registerPanel = new JPanel(new GridBagLayout());
-        registerPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.insets = new Insets(10, 10, 10, 10);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
+        JComboBox<String> typeCombo = new JComboBox<>(new String[] { "Rental Agent", "Mechanic" });
+        JTextField idField = new JTextField(15);
+        JTextField nameFieldReg = new JTextField(15);
+        JTextField surnameFieldReg = new JTextField(15);
+        JTextField emailFieldReg = new JTextField(15);
+        JPasswordField passFieldReg = new JPasswordField(15);
+
+        int y = 0;
+        addLabelAndField(registerPanel, "Employee Type:", typeCombo, gbc, y++);
+        addLabelAndField(registerPanel, "ID Number (11 Digits):", idField, gbc, y++);
+        addLabelAndField(registerPanel, "Name:", nameFieldReg, gbc, y++);
+        addLabelAndField(registerPanel, "Surname:", surnameFieldReg, gbc, y++);
+        addLabelAndField(registerPanel, "Username / Email:", emailFieldReg, gbc, y++);
+        addLabelAndField(registerPanel, "Password:", passFieldReg, gbc, y++);
+
+        JButton submitBtn = new JButton("Submit Register");
+        JButton backBtn = new JButton("Back to Login");
+
         gbc.gridx = 0;
-        gbc.gridy = 0;
-        registerPanel.add(new JLabel("Customer ID (11 digits):"), gbc);
-        customerIdField = new JTextField(20);
-        gbc.gridy = 1;
-        registerPanel.add(customerIdField, gbc);
-
-        gbc.gridy = 2;
-        registerPanel.add(new JLabel("Name:"), gbc);
-        nameField = new JTextField(20);
-        gbc.gridy = 3;
-        registerPanel.add(nameField, gbc);
-
-        gbc.gridy = 4;
-        registerPanel.add(new JLabel("Surname:"), gbc);
-        surnameField = new JTextField(20);
-        gbc.gridy = 5;
-        registerPanel.add(surnameField, gbc);
-
-        gbc.gridy = 6;
-        registerPanel.add(new JLabel("Email Address:"), gbc);
-        registerEmailField = new JTextField(20);
-        gbc.gridy = 7;
-        registerPanel.add(registerEmailField, gbc);
-
-        gbc.gridy = 8;
-        registerPanel.add(new JLabel("Set Password:"), gbc);
-        setPasswordField = new JPasswordField(20);
-        gbc.gridy = 9;
-        registerPanel.add(setPasswordField, gbc);
-
-        submitRegisterButton = new JButton("Submit Register");
-        gbc.gridy = 10;
+        gbc.gridy = y;
         gbc.gridwidth = 1;
-        registerPanel.add(submitRegisterButton, gbc);
-
-        backButton = new JButton("Back to Login");
+        registerPanel.add(submitBtn, gbc);
         gbc.gridx = 1;
-        registerPanel.add(backButton, gbc);
+        registerPanel.add(backBtn, gbc);
 
-        submitRegisterButton.addActionListener(e -> handleRegister());
-        backButton.addActionListener(e -> showLoginPanel());
+        backBtn.addActionListener(e -> showLoginPanel());
+
+        submitBtn.addActionListener(e -> {
+            String type = (String) typeCombo.getSelectedItem();
+            String id = idField.getText().trim();
+            String name = nameFieldReg.getText().trim();
+            String surname = surnameFieldReg.getText().trim();
+            String username = emailFieldReg.getText().trim();
+            String pass = new String(passFieldReg.getPassword());
+
+            // Validate empty fields
+            if (id.isEmpty() || name.isEmpty() || surname.isEmpty() || username.isEmpty() || pass.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Please fill in all fields.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            // Validate 11-digit ID requirement
+            if (!id.matches("\\d{11}")) {
+                JOptionPane.showMessageDialog(this, "ID Number must be exactly 11 digits.", "Error",
+                        JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            String fullName = name + " " + surname;
+
+            // Load branches and employees to update the list
+            java.util.ArrayList<Branch> branches = FileManager.loadBranches();
+            java.util.ArrayList<Employee> employees = FileManager.loadEmployees(branches);
+
+            // Assign default branch if none exists to prevent NullPointerException
+            Branch branch = branches.isEmpty() ? new Branch("BR00", "Main Branch", "Izmir") : branches.get(0);
+
+            // Instantiate appropriate Employee subclass using Polymorphism
+            Employee newEmployee;
+            if (type.equals("Mechanic")) {
+                newEmployee = new Mechanic(id, fullName, username, pass, branch);
+            } else {
+                newEmployee = new RentalAgent(id, fullName, username, pass, branch);
+            }
+
+            // Append to list and save to file
+            employees.add(newEmployee);
+            FileManager.saveEmployees(employees);
+
+            JOptionPane.showMessageDialog(this, "Employee (" + type + ") Registered Successfully!");
+
+            // Clear fields after successful registration
+            idField.setText("");
+            nameFieldReg.setText("");
+            surnameFieldReg.setText("");
+            emailFieldReg.setText("");
+            passFieldReg.setText("");
+
+            showLoginPanel();
+        });
+    }
+
+    private void addLabelAndField(JPanel p, String label, JComponent field, GridBagConstraints gbc, int y) {
+        gbc.gridx = 0;
+        gbc.gridy = y;
+        gbc.gridwidth = 1;
+        p.add(new JLabel(label), gbc);
+        gbc.gridx = 1;
+        p.add(field, gbc);
     }
 
     private void handleLogin() {
-        String email = emailField.getText().trim();
-        String password = new String(passwordField.getPassword());
+        String usernameInput = emailField.getText().trim();
+        String passwordInput = new String(passwordField.getPassword());
 
-        if (email.isEmpty() || password.isEmpty()) {
+        if (usernameInput.isEmpty() || passwordInput.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Please fill in all fields.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
-        java.util.ArrayList<Customer> customers = FileManager.loadCustomers();
+        // Dashboard login checks Employee credentials, not Customer credentials
+        java.util.ArrayList<Branch> branches = FileManager.loadBranches();
+        java.util.ArrayList<Employee> employees = FileManager.loadEmployees(branches);
         boolean loginSuccess = false;
-        Customer loggedInUser = null; // Giriş yapan kullanıcıyı tutmak için
+        Employee loggedInUser = null;
 
-        for (Customer c : customers) {
-            if (c.getEmail().equals(email) && c.getPassword().equals(password)) {
+        for (Employee e : employees) {
+            if (e.getUsername().equals(usernameInput) && e.getPassword().equals(passwordInput)) {
                 loginSuccess = true;
-                loggedInUser = c; // Eşleşen kullanıcıyı kaydet
+                loggedInUser = e;
                 break;
             }
         }
 
         if (loginSuccess) {
-            String fullName = loggedInUser.getName() + " " + loggedInUser.getSurname();
+            String fullName = loggedInUser.getFullName();
             JOptionPane.showMessageDialog(this, "Login successful!\nWelcome, " + fullName, "Success",
                     JOptionPane.INFORMATION_MESSAGE);
 
-            // İsim bilgisini RentalGUI'ye parametre olarak gönderiyoruz
             SwingUtilities.invokeLater(() -> {
                 RentalGUI rentalGUI = new RentalGUI(fullName);
                 rentalGUI.setVisible(true);
             });
             this.dispose();
         } else {
-            JOptionPane.showMessageDialog(this, "Invalid email or password.", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Invalid username or password.", "Error", JOptionPane.ERROR_MESSAGE);
         }
-    }
-
-    private void handleRegister() {
-        String customerId = customerIdField.getText().trim();
-        String name = nameField.getText().trim();
-        String surname = surnameField.getText().trim();
-        String email = registerEmailField.getText().trim();
-        String password = new String(setPasswordField.getPassword());
-
-        if (customerId.isEmpty() || name.isEmpty() || surname.isEmpty() || email.isEmpty() || password.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Please fill in all fields.", "Error", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-
-        if (!customerId.matches("\\d{11}")) {
-            JOptionPane.showMessageDialog(this, "Customer ID must be exactly 11 digits.", "Error",
-                    JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-
-        String emailRegex = "^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$";
-        if (!email.matches(emailRegex)) {
-            JOptionPane.showMessageDialog(this, "Please enter a valid email address.", "Error",
-                    JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-
-        java.util.ArrayList<Customer> customers = FileManager.loadCustomers();
-        for (Customer c : customers) {
-            if (c.getEmail().equals(email)) {
-                JOptionPane.showMessageDialog(this, "Email already registered.", "Error", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-        }
-
-        Customer newCustomer = new Customer(customerId, name, surname, email, password);
-        FileManager.saveCustomer(newCustomer);
-
-        JOptionPane.showMessageDialog(this, "Registration successful!", "Success", JOptionPane.INFORMATION_MESSAGE);
-        showLoginPanel();
     }
 
     private void showRegisterPanel() {
@@ -218,12 +220,5 @@ public class LoginGUI extends JFrame {
 
     private void showLoginPanel() {
         ((CardLayout) getContentPane().getLayout()).show(getContentPane(), "Login");
-    }
-
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            LoginGUI gui = new LoginGUI();
-            gui.setVisible(true);
-        });
     }
 }

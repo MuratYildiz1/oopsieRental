@@ -1,13 +1,13 @@
 package oopsierental;
 
 public class Mechanic extends Employee {
-    public Mechanic(String id, String name, String user, String pass, Branch branch) {
-        super(id, name, user, pass, branch);
+
+    public Mechanic(String employeeId, String fullName, String username, String password, Branch branch) {
+        super(employeeId, fullName, username, password, branch);
     }
 
     @Override
     public String getRolePermissions() {
         return "Technical Access: Manage Vehicle Maintenance and Damage Assessments";
     }
-
 }

@@ -1,39 +1,37 @@
 ```mermaid
 
 sequenceDiagram
-    actor Admin
-    participant L as LoginGUI
-    participant R as RentalGUI
-    participant DB as FileSystem
-    participant V as Vehicle
-    participant RES as Reservation
-    participant INV as Invoice
+    actor Agent as RentalAgent GUI_User
+    participant GUI as RentalGUI
+    participant Logic as RentalAgent Domain
+    participant Veh as Vehicle
+    participant Inv as Invoice
+    participant DB as FileManager
 
-    Admin->>L: Enter credentials
-    L->>DB: loadCustomers()
-    DB-->>L: user list
-    L->>R: init GUI
+    Agent->>GUI: Click Process Return
+    GUI->>GUI: populateReturnDetails()
+    GUI->>Logic: processReturn(reservation, km, damage, washing, missing)
+    activate Logic
+    Logic->>Veh: addMileage(km)
 
-    Note over R: System initialized
+    alt hasDamage == true
+        Logic->>Veh: setUnderMaintenance(true)
+    else hasDamage == false
+        Logic->>Veh: setUnderMaintenance(false)
+    end
 
-    Admin->>R: Search and rent vehicle
-    R->>RES: create reservation
-    activate RES
-    RES->>V: setRented(true)
-    deactivate RES
+    Logic->>Veh: setRented(false)
+    Logic->>Veh: setRentedDays(0)
 
-    R->>DB: saveReservation
-    R->>DB: saveVehicles
+    Logic->>Inv: new Invoice(reservation, washing, missing)
+    activate Inv
+    Inv-->>Logic: finalInvoice
+    deactivate Inv
 
-    Note over Admin,V: Return process
-
-    Admin->>R: Process return
-    R->>INV: create invoice
-    activate INV
-    INV-->>R: return amount
-    deactivate INV
-
-    R->>V: update location
-    R->>V: setRented(false)
-    R->>DB: saveInvoice
-    R->>DB: saveVehicles
+    Logic-->>GUI: return finalInvoice
+    deactivate Logic
+    
+    GUI->>DB: saveInvoice(finalInvoice)
+    GUI->>Veh: setBranch(dropoffCity)
+    GUI->>DB: saveVehicles(vehicles)
+    GUI->>Agent: Show Invoice Summary

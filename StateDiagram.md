@@ -1,25 +1,12 @@
 ```mermaid
 
-
 stateDiagram-v2
-    [*] --> Available : System Start
-
-    state Available {
-        [*]-->Idle
-        Idle --> Idle : Filter by City/Type
-    }
-
-    Available --> Rented : Renting Process
-    Rented --> Available : Process Return
-
-    Rented --> Unavailable : Send to Maintenance (Crash)
-    Available --> Unavailable : Send to Maintenance (Check)
-
-    state Unavailable {
-        [*]-->InMaintenance
-        InMaintenance --> ResolveDialog : Open Resolve
-        ResolveDialog --> SaveHistory : Add Notes
-    }
-
-    Unavailable --> Available : Resolved
-    Available --> [*] : System Shutdown
+    [*] --> Available : System Initialization
+    
+    Available --> Rented : rent() [Reservation Created]
+    Rented --> Available : processReturn() [hasDamage = false]
+    
+    Rented --> UnderMaintenance : processReturn() [hasDamage = true]
+    Available --> UnderMaintenance : markUnavailable() [Sent to Mechanic]
+    
+    UnderMaintenance --> Available : resolveUnavailableCar() [Mechanic Notes Added]

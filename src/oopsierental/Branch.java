@@ -20,10 +20,9 @@ public class Branch implements Serializable {
                 return b;
             }
         }
-        return null; // Bulunamazsa null döner
+        return null;
     }
 
-    // Getters and Setters
     public String getBranchId() {
         return branchId;
     }
@@ -40,5 +39,4 @@ public class Branch implements Serializable {
     public String toString() {
         return branchName + " (" + city + ")";
     }
-
 }

@@ -1,15 +1,7 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package oopsierental;
 
-/**
- *
- * @author murat
- */
 public class Customer {
-    // Encapsulation: private fields to protect data from direct access
+
     private String id;
     private String name;
     private String surname;
@@ -18,7 +10,6 @@ public class Customer {
     private String loyaltyTier;
     private int loyaltyPoints;
 
-    // Constructor to initialize a new customer with default Bronze tier
     public Customer(String id, String name, String surname, String email, String password) {
         this.id = id;
         this.name = name;
@@ -29,7 +20,7 @@ public class Customer {
         this.loyaltyPoints = 0;
     }
 
-    // Logic to return discount percentage based on loyalty tier
+    // Calculates discount rate dynamically based on customer's current loyalty tier
     public double getDiscountRate() {
         if (loyaltyTier.equalsIgnoreCase("Gold")) {
             return 0.20;
@@ -39,7 +30,6 @@ public class Customer {
         return 0.0;
     }
 
-    // Getters and Setters (Encapsulation)
     public String getId() {
         return id;
     }

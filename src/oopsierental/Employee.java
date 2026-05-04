@@ -2,13 +2,14 @@ package oopsierental;
 
 import java.io.Serializable;
 
-
 public abstract class Employee implements Serializable {
     private String employeeId;
     private String fullName;
     private String username;
     private String password;
-    private Branch branch; // Composition: Each employee belongs to a branch
+
+    // Composition: Each employee is strictly tied to a specific branch instance
+    private Branch branch;
 
     public Employee(String employeeId, String fullName, String username, String password, Branch branch) {
         this.employeeId = employeeId;
@@ -18,13 +19,31 @@ public abstract class Employee implements Serializable {
         this.branch = branch;
     }
 
-    // Abstract method: Each role will have its own primary responsibility
+    // Defines role-specific permissions to be overridden by subclasses (Mechanic,
+    // Agent, Manager)
     public abstract String getRolePermissions();
 
-    // Getters
-    public String getFullName() { return fullName; }
-    public String getUsername() { return username; }
-    public String getPassword() { return password; }
-    public Branch getBranch() { return branch; }
-    public String getEmployeeId() { return employeeId; }
+    public String getFullName() {
+        return fullName;
+    }
+
+    public String getName() {
+        return fullName;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public Branch getBranch() {
+        return branch;
+    }
+
+    public String getEmployeeId() {
+        return employeeId;
+    }
 }
