@@ -18,6 +18,7 @@ public class Invoice {
     private int RentalDays;
     private double damageFee;
     private double totalAmount;
+    private double discountAmount;
 
     // Constructor to initialize invoice with ID and reservation data
     public Invoice(String invoiceId, Reservation reservation, int RentalDays, double damageFee) {
@@ -27,15 +28,23 @@ public class Invoice {
         this.RentalDays = RentalDays;
         this.damageFee = damageFee;
 
-        double dailyVehicleRate = reservation.getVehicle().getDailyRate();
-        double dailyInsuranceRate = reservation.getInsuranceDailyCost();
-
         double baseRent = reservation.getVehicle().getDailyRate() * RentalDays;
-        this.totalAmount = baseRent + damageFee;
+        double insuranceTotal = reservation.getInsuranceDailyCost() * RentalDays;
+
+        if (RentalDays == reservation.getDays()) {
+            this.totalAmount = reservation.getTotalPrice() + damageFee;
+            this.discountAmount = (baseRent + insuranceTotal) - reservation.getTotalPrice();
+        } else {
+            this.totalAmount = baseRent + insuranceTotal + damageFee;
+            this.discountAmount = 0;
+        }
     }
 
     // Formats the invoice details into a professional string for printing
     public String getFormattedInvoice() {
+        double baseRent = reservation.getVehicle().getDailyRate() * RentalDays;
+        double insuranceTotal = reservation.getInsuranceDailyCost() * RentalDays;
+
         StringBuilder sb = new StringBuilder();
         sb.append("---------- RENT-A-CAR INVOICE ----------\n");
         sb.append("Invoice No: ").append(invoiceId).append("\n");
@@ -46,17 +55,18 @@ public class Invoice {
 
         sb.append("-----------------------------------------\n");
         sb.append("Rental Days : ").append(RentalDays).append(" days\n");
-        sb.append("Base Rent   : ").append(totalAmount - damageFee).append(" TL\n");
-        
-        sb.append(" (Includes ").append(reservation.getInsuranceType()).append(" Insurance)\n");
-
+        sb.append("Base Rent   : ").append(String.format("%.2f", baseRent)).append(" TL\n");
+        if (insuranceTotal > 0) {
+            sb.append("Insurance   : ").append(String.format("%.2f", insuranceTotal)).append(" TL\n");
+        }
+        if (discountAmount > 0) {
+            sb.append("Discount    : -").append(String.format("%.2f", discountAmount)).append(" TL\n");
+        }
         if (damageFee > 0) {
-            sb.append("DAMAGE FEE  : ").append(damageFee).append(" TL (Damage Assessment Applied)\n");
+            sb.append("Damage Fee  : ").append(String.format("%.2f", damageFee)).append(" TL\n");
         }
         sb.append("-----------------------------------------\n");
-        sb.append("TOTAL AMOUNT: ").append(totalAmount).append(" TL\n");
-        sb.append("-----------------------------------------\n");
-        sb.append("Have a safe trip!\n");
+        sb.append("TOTAL AMOUNT: ").append(String.format("%.2f", totalAmount)).append(" TL\n");
 
         return sb.toString();
     }

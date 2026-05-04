@@ -1,6 +1,2 @@
-1,Murat,Yildiz,Gold
-2,Kerem Halis,Kardes,Gold
-3,Mehmet,Kartop,Bronze
-4,Kamil,Elmas,Silver
-CST-01,Murat,Yildiz,Bronze
-CST-01,Murat,Yildiz,Bronze
+11111111111,Murat,Yildiz,muratyildiz35@gmail.com,123,Gold
+12345678910,Kerem Halis,Kardes,keremkardes35@gmail.com,123,Bronze

@@ -25,8 +25,9 @@ public class FileManager {
         try (PrintWriter writer = new PrintWriter(new FileWriter(VEHICLE_FILE))) {
             for (Vehicle v : vehicles) {
                 String type = v.getClass().getSimpleName();
+                String branchId = v.getBranch() != null ? v.getBranch().getBranchId() : "UNKNOWN";
                 writer.println(type + "," + v.getPlate() + "," + v.getBrand() + "," +
-                        v.dailyRate + "," + v.getBranch().getBranchId());
+                        v.dailyRate + "," + branchId + "," + v.isRented() + "," + v.getRentedDays());
             }
         } catch (IOException e) {
             System.err.println("File writing error: " + e.getMessage());
@@ -50,7 +51,7 @@ public class FileManager {
             String line;
             while ((line = br.readLine()) != null) {
                 String[] data = line.split(",");
-                list.add(new Branch(data[0], data[1], data[2], "Default Address"));
+                list.add(new Branch(data[0], data[1], data[2]));
             }
         } catch (Exception e) {
             System.out.println("No branches found.");
@@ -64,12 +65,18 @@ public class FileManager {
             String line;
             while ((line = br.readLine()) != null) {
                 String[] data = line.split(",");
+                if (data.length < 5) {
+                    continue;
+                }
                 String type = data[0];
                 String plate = data[1];
                 String brand = data[2];
                 double dailyRate = Double.parseDouble(data[3]);
                 String branchId = data[4];
                 Branch b = Branch.findById(branches, branchId);
+                if (b == null) {
+                    b = branches.isEmpty() ? new Branch("BR00", "Unknown", "Unknown") : branches.get(0);
+                }
                 Vehicle v = null;
 
                 switch (type) {
@@ -87,6 +94,10 @@ public class FileManager {
                         break;
                 }
                 if (v != null) {
+                    if (data.length >= 7) {
+                        v.setRented(Boolean.parseBoolean(data[5]));
+                        v.setRentedDays(Integer.parseInt(data[6]));
+                    }
                     list.add(v);
                 }
             }
@@ -149,7 +160,8 @@ public class FileManager {
     // Appends a single customer record to the customer file[cite: 20]
     public static void saveCustomer(Customer c) {
         try (PrintWriter out = new PrintWriter(new FileWriter(CUSTOMER_FILE, true))) {
-            out.println(c.getId() + "," + c.getName() + "," + c.getSurname() + "," + c.getLoyaltyTier());
+            out.println(c.getId() + "," + c.getName() + "," + c.getSurname() + "," + c.getEmail() + ","
+                    + c.getPassword() + "," + c.getLoyaltyTier());
         } catch (IOException e) {
             System.err.println("File writing error: " + e.getMessage());
         }
@@ -171,8 +183,13 @@ public class FileManager {
             String line;
             while ((line = br.readLine()) != null) {
                 String[] data = line.split(",");
-                Customer c = new Customer(data[0], data[1], data[2]);
-                c.setLoyaltyTier(data[3]);
+                if (data.length < 5) {
+                    continue;
+                }
+                Customer c = new Customer(data[0], data[1], data[2], data[3], data[4]);
+                if (data.length >= 6) {
+                    c.setLoyaltyTier(data[5]);
+                }
                 list.add(c);
             }
         } catch (Exception e) {

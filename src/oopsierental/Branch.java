@@ -7,13 +7,11 @@ public class Branch implements Serializable {
     private String branchId;
     private String branchName;
     private String city;
-    private String address;
 
-    public Branch(String branchId, String branchName, String city, String address) {
+    public Branch(String branchId, String branchName, String city) {
         this.branchId = branchId;
         this.branchName = branchName;
         this.city = city;
-        this.address = address;
     }
 
     public static Branch findById(ArrayList<Branch> branches, String id) {

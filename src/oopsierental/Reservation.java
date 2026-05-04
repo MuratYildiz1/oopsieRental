@@ -35,6 +35,19 @@ public class Reservation {
         // Then calculate and mark as rented
         this.totalPrice = calculateFinalAmount();
         vehicle.setRented(true);
+        vehicle.setRentedDays(days);
+    }
+
+    public Reservation(String reservationId, Customer customer, Vehicle vehicle, int days) throws RentalException {
+        this(reservationId, customer, vehicle, days, "Standard", 0.0);
+    }
+
+    public int getDays() {
+        return days;
+    }
+
+    public double getTotalPrice() {
+        return totalPrice;
     }
 
     // Business logic to apply customer's discount to the base rent

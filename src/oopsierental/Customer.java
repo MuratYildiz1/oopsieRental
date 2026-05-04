@@ -13,14 +13,18 @@ public class Customer {
     private String id;
     private String name;
     private String surname;
+    private String email;
+    private String password;
     private String loyaltyTier;
     private int loyaltyPoints;
 
     // Constructor to initialize a new customer with default Bronze tier
-    public Customer(String id, String name, String surname) {
+    public Customer(String id, String name, String surname, String email, String password) {
         this.id = id;
         this.name = name;
         this.surname = surname;
+        this.email = email;
+        this.password = password;
         this.loyaltyTier = "Bronze";
         this.loyaltyPoints = 0;
     }
@@ -46,6 +50,14 @@ public class Customer {
 
     public String getSurname() {
         return surname;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public String getPassword() {
+        return password;
     }
 
     public String getLoyaltyTier() {
