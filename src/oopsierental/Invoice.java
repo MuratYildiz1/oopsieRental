@@ -1,85 +1,64 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package oopsierental;
 
 import java.util.Date;
 
-/**
- *
- * @author murat
- */
 public class Invoice {
 
     private String invoiceId;
     private Reservation reservation;
     private Date generationDate;
-    private int RentalDays;
-    private double damageFee;
-    private double totalAmount;
-    private double discountAmount;
+    private double totalDeductions;
+    private double finalRefund;
+    private String deductionDetails;
 
-    // Constructor to initialize invoice with ID and reservation data
-    public Invoice(String invoiceId, Reservation reservation, int RentalDays, double damageFee) {
+    public Invoice(String invoiceId, Reservation reservation, boolean hasWashingFee, boolean hasMissingObject) {
         this.invoiceId = invoiceId;
         this.reservation = reservation;
-        this.generationDate = new Date(); // Automatically sets the current date
-        this.RentalDays = RentalDays;
-        this.damageFee = damageFee;
+        this.generationDate = new Date();
 
-        double baseRent = reservation.getVehicle().getDailyRate() * RentalDays;
-        double insuranceTotal = reservation.getInsuranceDailyCost() * RentalDays;
+        this.totalDeductions = 0;
+        StringBuilder details = new StringBuilder();
 
-        if (RentalDays == reservation.getDays()) {
-            this.totalAmount = reservation.getTotalPrice() + damageFee;
-            this.discountAmount = (baseRent + insuranceTotal) - reservation.getTotalPrice();
-        } else {
-            this.totalAmount = baseRent + insuranceTotal + damageFee;
-            this.discountAmount = 0;
+        if (hasWashingFee) {
+            this.totalDeductions += 500;
+            details.append("- Washing Fee: 500 TL\n");
         }
+        if (hasMissingObject) {
+            this.totalDeductions += 2000;
+            details.append("- Missing Object: 2000 TL\n");
+        }
+
+        if (details.length() == 0) {
+            details.append("- No deductions.\n");
+        }
+        this.deductionDetails = details.toString();
+
+        // Calculate how much of the 5000 TL deposit goes back to the customer
+        this.finalRefund = reservation.getDepositAmount() - this.totalDeductions;
     }
 
-    // Formats the invoice details into a professional string for printing
     public String getFormattedInvoice() {
-        double baseRent = reservation.getVehicle().getDailyRate() * RentalDays;
-        double insuranceTotal = reservation.getInsuranceDailyCost() * RentalDays;
-
         StringBuilder sb = new StringBuilder();
-        sb.append("---------- RENT-A-CAR INVOICE ----------\n");
+        sb.append("---------- RETURN & REFUND INVOICE ----------\n");
         sb.append("Invoice No: ").append(invoiceId).append("\n");
         sb.append("Date: ").append(generationDate.toString()).append("\n");
+        sb.append("Customer: ").append(reservation.getCustomer().getName()).append(" ")
+                .append(reservation.getCustomer().getSurname()).append("\n");
+        sb.append("Vehicle: ").append(reservation.getVehicle().getBrand()).append(" (")
+                .append(reservation.getVehicle().getPlate()).append(")\n");
+        sb.append("Pick-up City: ").append(reservation.getPickUpLocation()).append("\n");
+        sb.append("Drop-off City: ").append(reservation.getReturnLocation()).append("\n");
         sb.append("-----------------------------------------\n");
-
-        sb.append(reservation.toString()).append("\n");
-
+        sb.append("Initial Deposit: ").append(reservation.getDepositAmount()).append(" TL\n");
+        sb.append("Deductions:\n").append(deductionDetails);
         sb.append("-----------------------------------------\n");
-        sb.append("Rental Days : ").append(RentalDays).append(" days\n");
-        sb.append("Base Rent   : ").append(String.format("%.2f", baseRent)).append(" TL\n");
-        if (insuranceTotal > 0) {
-            sb.append("Insurance   : ").append(String.format("%.2f", insuranceTotal)).append(" TL\n");
-        }
-        if (discountAmount > 0) {
-            sb.append("Discount    : -").append(String.format("%.2f", discountAmount)).append(" TL\n");
-        }
-        if (damageFee > 0) {
-            sb.append("Damage Fee  : ").append(String.format("%.2f", damageFee)).append(" TL\n");
-        }
-        sb.append("-----------------------------------------\n");
-        sb.append("TOTAL AMOUNT: ").append(String.format("%.2f", totalAmount)).append(" TL\n");
+        sb.append("FINAL REFUND TO CUSTOMER: ").append(finalRefund).append(" TL\n");
+        sb.append("=========================================\n");
 
         return sb.toString();
     }
 
     public String getInvoiceId() {
         return invoiceId;
-    }
-
-    public double getTotalAmount() {
-        return totalAmount;
-    }
-
-    public double getDamageFee() {
-        return damageFee;
     }
 }

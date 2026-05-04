@@ -4,3 +4,6 @@ ID: RES-1777757326776 | Customer: Murat | Vehicle: 35ECO02 | Amount: 2400.0 USD
 ID: RES-1777757666742 | Customer: Murat | Vehicle: 35LG35 | Amount: 25200.0 USD
 ID: RES-1777890255037 | Customer: Murat | Vehicle: 35LG35 | Amount: 8400.0 USD
 ID: RES-1777890606545 | Customer: Murat | Vehicle: 35SUV01 | Amount: 3456.0 USD
+ID: RES-1777914247189 | Customer: Metin Yilmaz | Vehicle: 35-IZM-201 | Total: 14000.0 TL
+ID: RES-1777914620941 | Customer: mehmet yilmaz | Vehicle: 34-XYZ-999 | Total: 126800.0 TL
+ID: RES-1777916000029 | Customer: ayse metin | Vehicle: 34-XYZ-999 | Total: 135500.0 TL

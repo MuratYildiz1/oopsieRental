@@ -2,93 +2,61 @@
 
 classDiagram
     direction TB
-
-    class Rentable {
-        <<interface>>
-        +rent() void
-        +returnVehicle() void
-    }
-
+    
+    %% Base Classes
     class Vehicle {
         <<abstract>>
         -plate : String
         -brand : String
-        #dailyRate : double
+        -dailyRate : double
         -isRented : boolean
-        -rentedDays : int
+        -underMaintenance : boolean
         -branch : Branch
-        -isUnderMaintenance : boolean
-        -mileage : int
-        +calculateRent(days: int)* double
-        +calculateRent(days: int, discountPercent: double) double
-        +addMileage(km: int) void
-        +rent() void
-        +returnVehicle() void
-    }
-
-    class Economy {
+        -rentedDays : int
         +calculateRent(days: int) double
+        +addMileage(km: int)
+        +gettersAndSetters()
     }
-    class SUV {
-        +calculateRent(days: int) double
-    }
-    class Luxury {
-        +calculateRent(days: int) double
-    }
-    class Van {
-        +calculateRent(days: int) double
-    }
-
-    Rentable <|.. Vehicle : implements
-    Vehicle <|-- Economy : extends
-    Vehicle <|-- SUV : extends
-    Vehicle <|-- Luxury : extends
-    Vehicle <|-- Van : extends
 
     class Employee {
         <<abstract>>
-        -employeeId : String
-        -fullName : String
+        -id : String
+        -name : String
         -username : String
         -password : String
         -branch : Branch
-        +getRolePermissions()* String
+        +getRolePermissions() String
     }
 
-    class BranchManager {
-        +getRolePermissions() String
-    }
+    %% Vehicle Hierarchy
+    class Economy { +calculateRent(days: int) double }
+    class SUV { +calculateRent(days: int) double }
+    class Luxury { +calculateRent(days: int) double }
+    class Van { +calculateRent(days: int) double }
+
+    Vehicle <|-- Economy
+    Vehicle <|-- SUV
+    Vehicle <|-- Luxury
+    Vehicle <|-- Van
+
+    %% Employee Hierarchy
     class RentalAgent {
-        +getRolePermissions() String
-        +processReturn(reservation: Reservation, drivenKm: int, hasDamage: boolean, damageFee: double) Invoice
+        +processReturn() Invoice
     }
     class Mechanic {
-        +getRolePermissions() String
+        +performMaintenance(v: Vehicle)
     }
 
-    Employee <|-- BranchManager : extends
-    Employee <|-- RentalAgent : extends
-    Employee <|-- Mechanic : extends
+    Employee <|-- RentalAgent
+    Employee <|-- Mechanic
 
-    class Branch {
-        -branchId : String
-        -branchName : String
-        -city : String
-        +findById(branches: ArrayList, id: String)$ Branch
-    }
-
-    Branch "1" o-- "many" Vehicle : contains
-    Branch "1" o-- "many" Employee : contains
-
+    %% Core Business Classes
     class Customer {
-        -id : String
+        -customerId : String
         -name : String
         -surname : String
         -email : String
         -password : String
-        -loyaltyTier : String
-        -loyaltyPoints : int
-        +getDiscountRate() double
     }
 
     class Reservation {
@@ -96,38 +64,57 @@ classDiagram
         -customer : Customer
         -vehicle : Vehicle
         -days : int
-        -totalPrice : double
         -insuranceType : String
         -insuranceDailyCost : double
-        +checkAvailability() void
-        -calculateFinalAmount() double
+        -pickUpLocation : String
+        -returnLocation : String
+        -totalPrice : double
+        -depositAmount : double
+        +calculateFinalAmount() double
     }
-
-    Reservation "1" --> "1" Customer : has-a
-    Reservation "1" --> "1" Vehicle : has-a
 
     class Invoice {
         -invoiceId : String
         -reservation : Reservation
         -generationDate : Date
-        -RentalDays : int
-        -damageFee : double
-        -totalAmount : double
-        -discountAmount : double
+        -totalDeductions : double
+        -finalRefund : double
+        -deductionDetails : String
         +getFormattedInvoice() String
     }
 
-    Invoice "1" --> "1" Reservation : has-a
-
-    class FileManager {
-        +saveVehicles(vehicles: ArrayList)$ void
-        +loadVehicles(branches: ArrayList)$ ArrayList
-        +saveBranches(branches: ArrayList)$ void
-        +loadBranches()$ ArrayList
-        +saveEmployees(employees: ArrayList)$ void
-        +loadEmployees(branches: ArrayList)$ ArrayList
-        +saveCustomer(c: Customer)$ void
-        +loadCustomers()$ ArrayList
-        +saveReservation(res: Reservation)$ void
-        +saveInvoice(invoice: Invoice)$ void
+    class Branch {
+        -branchId : String
+        -branchName : String
+        -city : String
     }
+
+    %% Management
+    class FileManager {
+        <<utility>>
+        +saveVehicles(vehicles: List)
+        +loadVehicles(branches: List)
+        +saveReservation(res: Reservation)
+        +saveInvoice(inv: Invoice)
+        +saveCustomer(c: Customer)
+    }
+
+    class RentalGUI {
+        -loggedInEmployeeName : String
+        -unavailableReasons : Map
+        -assignedMechanics : Map
+        -activeReservations : List
+        +refreshAllTables()
+        +processReturnAction()
+        +openAddUnavailableCarDialog()
+        +saveMaintenanceRecord(r)
+    }
+
+    %% Relationships
+    Vehicle --> Branch
+    Employee --> Branch
+    Reservation --> Vehicle
+    Reservation --> Customer
+    Invoice --> Reservation
+    RentalGUI ..> FileManager
+    RentalGUI --> Reservation

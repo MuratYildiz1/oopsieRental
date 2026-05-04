@@ -2,8 +2,6 @@ package oopsierental;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import com.formdev.flatlaf.FlatLightLaf;
 
 public class LoginGUI extends JFrame {
@@ -96,35 +94,30 @@ public class LoginGUI extends JFrame {
         gbc.gridx = 0;
         gbc.gridy = 0;
         registerPanel.add(new JLabel("Customer ID (11 digits):"), gbc);
-
         customerIdField = new JTextField(20);
         gbc.gridy = 1;
         registerPanel.add(customerIdField, gbc);
 
         gbc.gridy = 2;
         registerPanel.add(new JLabel("Name:"), gbc);
-
         nameField = new JTextField(20);
         gbc.gridy = 3;
         registerPanel.add(nameField, gbc);
 
         gbc.gridy = 4;
         registerPanel.add(new JLabel("Surname:"), gbc);
-
         surnameField = new JTextField(20);
         gbc.gridy = 5;
         registerPanel.add(surnameField, gbc);
 
         gbc.gridy = 6;
         registerPanel.add(new JLabel("Email Address:"), gbc);
-
         registerEmailField = new JTextField(20);
         gbc.gridy = 7;
         registerPanel.add(registerEmailField, gbc);
 
         gbc.gridy = 8;
         registerPanel.add(new JLabel("Set Password:"), gbc);
-
         setPasswordField = new JPasswordField(20);
         gbc.gridy = 9;
         registerPanel.add(setPasswordField, gbc);
@@ -151,24 +144,29 @@ public class LoginGUI extends JFrame {
             return;
         }
 
-        // Load customers and check login
         java.util.ArrayList<Customer> customers = FileManager.loadCustomers();
         boolean loginSuccess = false;
+        Customer loggedInUser = null; // Giriş yapan kullanıcıyı tutmak için
+
         for (Customer c : customers) {
             if (c.getEmail().equals(email) && c.getPassword().equals(password)) {
                 loginSuccess = true;
+                loggedInUser = c; // Eşleşen kullanıcıyı kaydet
                 break;
             }
         }
 
         if (loginSuccess) {
-            JOptionPane.showMessageDialog(this, "Login successful!", "Success", JOptionPane.INFORMATION_MESSAGE);
-            // Open RentalGUI
+            String fullName = loggedInUser.getName() + " " + loggedInUser.getSurname();
+            JOptionPane.showMessageDialog(this, "Login successful!\nWelcome, " + fullName, "Success",
+                    JOptionPane.INFORMATION_MESSAGE);
+
+            // İsim bilgisini RentalGUI'ye parametre olarak gönderiyoruz
             SwingUtilities.invokeLater(() -> {
-                RentalGUI rentalGUI = new RentalGUI();
+                RentalGUI rentalGUI = new RentalGUI(fullName);
                 rentalGUI.setVisible(true);
             });
-            this.dispose(); // Close login window
+            this.dispose();
         } else {
             JOptionPane.showMessageDialog(this, "Invalid email or password.", "Error", JOptionPane.ERROR_MESSAGE);
         }
@@ -186,14 +184,12 @@ public class LoginGUI extends JFrame {
             return;
         }
 
-        // Check Customer ID: exactly 11 digits
         if (!customerId.matches("\\d{11}")) {
             JOptionPane.showMessageDialog(this, "Customer ID must be exactly 11 digits.", "Error",
                     JOptionPane.ERROR_MESSAGE);
             return;
         }
 
-        // Check Email format
         String emailRegex = "^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$";
         if (!email.matches(emailRegex)) {
             JOptionPane.showMessageDialog(this, "Please enter a valid email address.", "Error",
@@ -201,7 +197,6 @@ public class LoginGUI extends JFrame {
             return;
         }
 
-        // Check if email already exists
         java.util.ArrayList<Customer> customers = FileManager.loadCustomers();
         for (Customer c : customers) {
             if (c.getEmail().equals(email)) {
@@ -210,7 +205,6 @@ public class LoginGUI extends JFrame {
             }
         }
 
-        // Create and save customer
         Customer newCustomer = new Customer(customerId, name, surname, email, password);
         FileManager.saveCustomer(newCustomer);
 

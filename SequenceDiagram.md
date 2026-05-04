@@ -1,28 +1,39 @@
 ```mermaid
 
 sequenceDiagram
-    actor Agent as RentalAgent (GUI)
-    participant Res as Reservation
-    participant Veh as Vehicle
-    participant FM as FileManager
-    participant Inv as Invoice
+    actor Admin
+    participant L as LoginGUI
+    participant R as RentalGUI
+    participant DB as FileSystem
+    participant V as Vehicle
+    participant RES as Reservation
+    participant INV as Invoice
 
-    Agent->>GUI: Selects Customer, Vehicle, Days and clicks Button
-    GUI->>Res: new Reservation(Customer, Vehicle, Days)
-    activate Res
-    Res->>Veh: checkAvailability()
-    Veh-->>Res: (If vehicle is available, no error thrown)
-    Res->>Veh: calculateRent(days)
-    Veh-->>Res: totalRentAmount (Returns price)
-    Res->>Veh: setRented(true), setRentedDays(days)
-    Res-->>GUI: Reservation Object Created
-    deactivate Res
+    Admin->>L: Enter credentials
+    L->>DB: loadCustomers()
+    DB-->>L: user list
+    L->>R: init GUI
 
-    GUI->>FM: saveReservation(res)
-    GUI->>Inv: new Invoice(res, days, damageFee=0)
-    activate Inv
-    Inv-->>GUI: Invoice Object Created
-    deactivate Inv
-    GUI->>FM: saveInvoice(inv)
-    GUI->>FM: saveVehicles(vehicles)
-    GUI-->>Agent: Shows "Reservation completed successfully" message
+    Note over R: System initialized
+
+    Admin->>R: Search and rent vehicle
+    R->>RES: create reservation
+    activate RES
+    RES->>V: setRented(true)
+    deactivate RES
+
+    R->>DB: saveReservation
+    R->>DB: saveVehicles
+
+    Note over Admin,V: Return process
+
+    Admin->>R: Process return
+    R->>INV: create invoice
+    activate INV
+    INV-->>R: return amount
+    deactivate INV
+
+    R->>V: update location
+    R->>V: setRented(false)
+    R->>DB: saveInvoice
+    R->>DB: saveVehicles

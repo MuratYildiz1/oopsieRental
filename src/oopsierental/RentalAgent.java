@@ -1,6 +1,7 @@
 package oopsierental;
 
 public class RentalAgent extends Employee {
+
     public RentalAgent(String id, String name, String user, String pass, Branch branch) {
         super(id, name, user, pass, branch);
     }
@@ -10,10 +11,12 @@ public class RentalAgent extends Employee {
         return "Limited Access: Create Reservations, Process Pick-ups/Returns";
     }
 
-    public Invoice processReturn(Reservation reservation, int drivenKm, boolean hasDamage, double damageFee) {
-        
-        Vehicle vehicle = reservation.getVehicle();
+    // YENI MANTIK: Artık gün sayısı veya double hasar yerine, boolean kesintileri
+    // alıyor.
+    public Invoice processReturn(Reservation reservation, int drivenKm, boolean hasDamage, boolean hasWashingFee,
+            boolean hasMissingObject) {
 
+        Vehicle vehicle = reservation.getVehicle();
         vehicle.addMileage(drivenKm);
 
         if (hasDamage) {
@@ -21,15 +24,15 @@ public class RentalAgent extends Employee {
         } else {
             vehicle.setUnderMaintenance(false);
         }
-        
-        vehicle.setRented(false);
-        int days = vehicle.getRentedDays(); 
-        vehicle.setRentedDays(0); 
 
-        String generatedInvoiceId = "INV-" + System.currentTimeMillis(); 
-        
-        Invoice finalInvoice = new Invoice(generatedInvoiceId, reservation, days, damageFee);
-        
+        vehicle.setRented(false);
+        vehicle.setRentedDays(0);
+
+        String generatedInvoiceId = "INV-" + System.currentTimeMillis();
+
+        // PARAMETRELER YENI INVOICE SINIFINA UYGUN HALE GETIRILDI
+        Invoice finalInvoice = new Invoice(generatedInvoiceId, reservation, hasWashingFee, hasMissingObject);
+
         return finalInvoice;
     }
 }

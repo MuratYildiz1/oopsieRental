@@ -1,45 +1,81 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
-
 package oopsierental;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.PrintWriter;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
-/**
- * @author kerem
- * @author murat
- */
 public class RentalGUI extends JFrame {
 
+    private String loggedInEmployeeName;
+
+    // Core Data
     private ArrayList<Customer> customers;
     private ArrayList<Vehicle> vehicles;
+    private ArrayList<Branch> branches;
     private List<Vehicle> displayedVehicles;
+    private List<Reservation> activeReservations;
 
-    // Swing Components
-    private JComboBox<Customer> customerComboBox;
-    private JComboBox<Vehicle> vehicleComboBox;
-    private JComboBox<String> categoryFilterComboBox;
-    private JComboBox<String> priceSortComboBox;
-    private JTextField daysField;
-    private JTable vehicleTable;
-    private DefaultTableModel tableModel;
-    private JButton cancelRentalButton;
+    // GUI Caches (for non-database fields)
+    private Map<String, String> unavailableReasons = new HashMap<>();
+    private Map<String, String> assignedMechanics = new HashMap<>();
+    private Map<String, String> lastRentedBy = new HashMap<>();
+    private Map<String, String> reservedByEmployee = new HashMap<>();
+    private Map<String, String> unavailableAddedBy = new HashMap<>();
+
+    // Maintenance History Log Structure
+    static class MaintenanceRecord {
+        String plate, brand, reason, mechanic, notes, admin;
+
+        public MaintenanceRecord(String plate, String brand, String reason, String mechanic, String notes,
+                String admin) {
+            this.plate = plate;
+            this.brand = brand;
+            this.reason = reason;
+            this.mechanic = mechanic;
+            this.notes = notes;
+            this.admin = admin;
+        }
+    }
+
+    private List<MaintenanceRecord> maintenanceHistory = new ArrayList<>();
+
+    // GUI Components
+    private JTabbedPane tabbedPane;
+    private JTable carListTable, unavailableTable, rentedTable;
+    private JComboBox<String> categoryFilterCombo, priceSortCombo, cityFilterCombo, returnReservationCombo;
     private JLabel statusLabel;
 
-    public RentalGUI() {
+    // Return Panel Components
+    private JLabel retCarLbl, retDaysLbl, retPickupLbl, retDropoffLbl, retInsuranceLbl, retDepositLbl;
+    private JCheckBox washingCheck, missingObjectCheck;
+
+    public RentalGUI(String employeeName) {
+        this.loggedInEmployeeName = employeeName;
         setLookAndFeel();
         initData();
+        loadMaintenanceHistory();
         initUI();
+        statusLabel.setText("System Ready. Logged in as: " + loggedInEmployeeName);
+    }
+
+    public RentalGUI() {
+        this("Admin User");
     }
 
     private void setLookAndFeel() {
@@ -51,337 +87,789 @@ public class RentalGUI extends JFrame {
             try {
                 UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
             } catch (Exception ex) {
-                System.err.println("Unable to set Nimbus LAF: " + ex.getMessage());
             }
+        }
+    }
+
+    private void initData() {
+        branches = FileManager.loadBranches();
+        customers = FileManager.loadCustomers();
+        vehicles = FileManager.loadVehicles(branches);
+        displayedVehicles = new ArrayList<>(vehicles);
+        activeReservations = new ArrayList<>();
+
+        for (Vehicle v : vehicles) {
+            if (v.isUnderMaintenance()) {
+                unavailableReasons.put(v.getPlate(), "Maintenance");
+                assignedMechanics.put(v.getPlate(), "Pending");
+                unavailableAddedBy.put(v.getPlate(), "System");
+            }
+        }
+    }
+
+    private void loadMaintenanceHistory() {
+        try (BufferedReader br = new BufferedReader(new FileReader("maintenance_history.txt"))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                String[] parts = line.split("~");
+                if (parts.length == 6) {
+                    maintenanceHistory
+                            .add(new MaintenanceRecord(parts[0], parts[1], parts[2], parts[3], parts[4], parts[5]));
+                }
+            }
+        } catch (Exception e) {
+            // File might not exist yet, which is fine.
+        }
+    }
+
+    private void saveMaintenanceRecord(MaintenanceRecord record) {
+        maintenanceHistory.add(record);
+        try (PrintWriter out = new PrintWriter(new FileWriter("maintenance_history.txt", true))) {
+            out.println(record.plate + "~" + record.brand + "~" + record.reason + "~" + record.mechanic + "~"
+                    + record.notes + "~" + record.admin);
+        } catch (Exception e) {
+            System.err.println("Failed to save maintenance history.");
         }
     }
 
     private void initUI() {
-        setTitle("OOPSIE RENTAL - Vehicle Rental System");
-        setSize(980, 720);
+        setTitle("OOPSIE RENTAL - Dashboard");
+        setSize(1024, 768);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
-        setLayout(new BorderLayout(12, 12));
+        setLayout(new BorderLayout(10, 10));
 
         JPanel header = new JPanel(new BorderLayout());
-        header.setBorder(new EmptyBorder(12, 12, 0, 12));
-        JLabel titleLabel = new JLabel("OOPSIE RENTAL - Vehicle Rental System");
-        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 28));
+        header.setBorder(new EmptyBorder(15, 15, 5, 15));
+        JLabel titleLabel = new JLabel("OOPSIE RENTAL - Management Dashboard");
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 24));
         header.add(titleLabel, BorderLayout.WEST);
 
-        statusLabel = new JLabel("Ready");
-        statusLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        statusLabel = new JLabel("System Ready.");
         header.add(statusLabel, BorderLayout.SOUTH);
         add(header, BorderLayout.NORTH);
 
-        JTabbedPane tabbedPane = new JTabbedPane();
-        tabbedPane.addTab("Vehicle Catalog", createVehicleListPanel());
-        tabbedPane.addTab("Make Reservation", createReservationPanel());
+        tabbedPane = new JTabbedPane();
+        tabbedPane.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+
+        tabbedPane.addTab("Car List", createCarListPanel());
+        tabbedPane.addTab("Unavailable Cars", createUnavailablePanel());
+        tabbedPane.addTab("Rented", createRentedPanel());
+        tabbedPane.addTab("Return", createReturnPanel());
+
+        tabbedPane.addChangeListener(e -> refreshAllTables());
         add(tabbedPane, BorderLayout.CENTER);
     }
 
-    private void initData() {
-        ArrayList<Branch> branches = FileManager.loadBranches();
-        if (branches.isEmpty()) {
-            Branch defaultBranch = new Branch("BR01", "İzmir Center", "İzmir");
-            branches.add(defaultBranch);
-            FileManager.saveBranches(branches);
-        }
-
-        customers = FileManager.loadCustomers();
-        if (customers.isEmpty()) {
-            Customer c1 = new Customer("1", "Murat", "Yildiz", "murat@yildiz.com", "123");
-            Customer c2 = new Customer("2", "Kerem", "Güler", "kerem@guler.com", "123");
-            customers.add(c1);
-            customers.add(c2);
-            FileManager.saveCustomer(c1);
-            FileManager.saveCustomer(c2);
-        }
-
-        vehicles = FileManager.loadVehicles(branches);
-        if (vehicles.isEmpty()) {
-            Branch defaultBranch = branches.get(0);
-            vehicles.add(new SUV("35ABC123", "Dacia Duster", 1000.0, defaultBranch));
-            vehicles.add(new Economy("35XYZ789", "Renault Clio", 500.0, defaultBranch));
-            vehicles.add(new Luxury("34LXC001", "Mercedes C200", 2500.0, defaultBranch));
-            vehicles.add(new Van("06VAN444", "Ford Transit", 1200.0, defaultBranch));
-            FileManager.saveVehicles(vehicles);
-        }
-
-        displayedVehicles = new ArrayList<>(vehicles);
-    }
-
-    // --- 1: Vehicle List (Read Method) ---
-    private JPanel createVehicleListPanel() {
+    // ==========================================
+    // TAB 1: CAR LIST
+    // ==========================================
+    private JPanel createCarListPanel() {
         JPanel panel = new JPanel(new BorderLayout(10, 10));
         panel.setBorder(new EmptyBorder(10, 10, 10, 10));
 
-        JPanel filterPanel = new JPanel(new GridBagLayout());
-        filterPanel.setBorder(BorderFactory.createTitledBorder("Filter & Actions"));
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(8, 8, 8, 8);
-        gbc.anchor = GridBagConstraints.WEST;
+        JPanel filterPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 10));
+        filterPanel.setBorder(BorderFactory.createTitledBorder("Sort & Filter"));
 
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        filterPanel.add(new JLabel("Category:"), gbc);
+        categoryFilterCombo = new JComboBox<>(new String[] { "All Types", "Economy", "SUV", "Luxury", "Van" });
+        priceSortCombo = new JComboBox<>(new String[] { "Default", "Price: High to Low", "Price: Low to High" });
 
-        categoryFilterComboBox = new JComboBox<>(new String[] { "All Types", "Economy", "SUV", "Luxury", "Van" });
-        gbc.gridx = 1;
-        filterPanel.add(categoryFilterComboBox, gbc);
+        List<String> cities = branches.stream().map(Branch::getCity).distinct().collect(Collectors.toList());
+        cities.add(0, "All Cities");
+        cityFilterCombo = new JComboBox<>(cities.toArray(new String[0]));
 
-        gbc.gridx = 0;
-        gbc.gridy = 1;
-        filterPanel.add(new JLabel("Price Sort:"), gbc);
+        JButton applyBtn = new JButton("Apply Filters");
+        applyBtn.addActionListener(e -> applyCarFilters());
 
-        priceSortComboBox = new JComboBox<>(new String[] { "Default", "High → Low", "Low → High" });
-        gbc.gridx = 1;
-        filterPanel.add(priceSortComboBox, gbc);
-
-        JButton applyButton = new JButton("Apply");
-        gbc.gridx = 2;
-        gbc.gridy = 0;
-        gbc.gridheight = 2;
-        gbc.fill = GridBagConstraints.VERTICAL;
-        filterPanel.add(applyButton, gbc);
-
-        cancelRentalButton = new JButton("Cancel Selected Rental");
-        cancelRentalButton.setEnabled(false);
-        gbc.gridx = 3;
-        gbc.gridy = 0;
-        filterPanel.add(cancelRentalButton, gbc);
+        filterPanel.add(new JLabel("Type:"));
+        filterPanel.add(categoryFilterCombo);
+        filterPanel.add(new JLabel("Sort:"));
+        filterPanel.add(priceSortCombo);
+        filterPanel.add(new JLabel("City:"));
+        filterPanel.add(cityFilterCombo);
+        filterPanel.add(applyBtn);
 
         panel.add(filterPanel, BorderLayout.NORTH);
 
-        String[] columns = { "Plate", "Brand", "Category", "Branch", "Daily Rate", "Status" };
-        tableModel = new DefaultTableModel(columns, 0) {
+        carListTable = new JTable();
+        carListTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        carListTable.addMouseListener(new MouseAdapter() {
             @Override
-            public boolean isCellEditable(int row, int column) {
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2)
+                    handleCarSelection();
+            }
+        });
+
+        panel.add(new JScrollPane(carListTable), BorderLayout.CENTER);
+
+        JButton rentBtn = new JButton("Rent Selected Car");
+        rentBtn.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        rentBtn.addActionListener(e -> handleCarSelection());
+        panel.add(rentBtn, BorderLayout.SOUTH);
+
+        return panel;
+    }
+
+    private void applyCarFilters() {
+        String type = (String) categoryFilterCombo.getSelectedItem();
+        String sort = (String) priceSortCombo.getSelectedItem();
+        String city = (String) cityFilterCombo.getSelectedItem();
+
+        displayedVehicles = vehicles.stream()
+                .filter(v -> type.equals("All Types") || v.getClass().getSimpleName().equals(type))
+                .filter(v -> city.equals("All Cities") || v.getBranch().getCity().equals(city))
+                .collect(Collectors.toList());
+
+        if (sort.equals("Price: High to Low")) {
+            displayedVehicles.sort((v1, v2) -> Double.compare(v2.getDailyRate(), v1.getDailyRate()));
+        } else if (sort.equals("Price: Low to High")) {
+            displayedVehicles.sort(Comparator.comparingDouble(Vehicle::getDailyRate));
+        }
+        updateCarTable();
+    }
+
+    private void updateCarTable() {
+        String[] cols = { "Plate", "Brand", "Type", "Current Location", "Daily Rate", "Status" };
+        DefaultTableModel model = new DefaultTableModel(cols, 0) {
+            @Override
+            public boolean isCellEditable(int r, int c) {
                 return false;
             }
         };
-        vehicleTable = new JTable(tableModel);
-        vehicleTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        refreshTable();
 
-        JScrollPane scrollPane = new JScrollPane(vehicleTable);
-        panel.add(scrollPane, BorderLayout.CENTER);
-
-        applyButton.addActionListener(e -> applyFiltersAndSort());
-        cancelRentalButton.addActionListener(e -> handleCancelRental());
-        vehicleTable.getSelectionModel().addListSelectionListener(e -> updateCancelButtonState());
-
-        return panel;
-    }
-
-    private void refreshTable() {
-        tableModel.setRowCount(0);
         for (Vehicle v : displayedVehicles) {
-            String status = v.isRented() ? "Rented (" + v.getRentedDays() + " days left)" : "Available";
-            tableModel.addRow(new Object[] {
-                    v.getPlate(),
-                    v.getBrand(),
-                    v.getClass().getSimpleName(),
-                    v.getBranch().getBranchName(),
-                    String.format("%.2f TL", v.getDailyRate()),
-                    status
-            });
+            String status = v.isRented() ? "Rented" : (v.isUnderMaintenance() ? "Unavailable" : "Available");
+            model.addRow(new Object[] { v.getPlate(), v.getBrand(), v.getClass().getSimpleName(),
+                    v.getBranch().getCity(), v.getDailyRate() + " TL", status });
         }
-        updateCancelButtonState();
+        carListTable.setModel(model);
     }
 
-    // --- 2: Reservation Screen (Create Method & Error Handling) ---
-    private JPanel createReservationPanel() {
-        JPanel panel = new JPanel(new GridBagLayout());
-        panel.setBorder(BorderFactory.createTitledBorder("Make New Reservation"));
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(12, 12, 12, 12);
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        panel.add(new JLabel("Select Customer:"), gbc);
-
-        customerComboBox = new JComboBox<>(customers.toArray(new Customer[0]));
-        gbc.gridx = 1;
-        panel.add(customerComboBox, gbc);
-
-        gbc.gridx = 0;
-        gbc.gridy = 1;
-        panel.add(new JLabel("Select Vehicle:"), gbc);
-
-        vehicleComboBox = new JComboBox<>(getAvailableVehicles().toArray(new Vehicle[0]));
-        gbc.gridx = 1;
-        panel.add(vehicleComboBox, gbc);
-
-        gbc.gridx = 0;
-        gbc.gridy = 2;
-        panel.add(new JLabel("Rental Duration (Days):"), gbc);
-
-        daysField = new JTextField(10);
-        gbc.gridx = 1;
-        panel.add(daysField, gbc);
-
-        JButton rentButton = new JButton("Rent Vehicle and Generate Invoice");
-        rentButton.setBackground(new Color(45, 115, 255));
-        rentButton.setForeground(Color.WHITE);
-        rentButton.setFocusPainted(false);
-        gbc.gridx = 0;
-        gbc.gridy = 3;
-        gbc.gridwidth = 2;
-        panel.add(rentButton, gbc);
-
-        rentButton.addActionListener(e -> handleReservation());
-
-        return panel;
-    }
-
-    // ERROR HANDLING
-    private void handleReservation() {
-        try {
-            Customer selectedCustomer = (Customer) customerComboBox.getSelectedItem();
-            Vehicle selectedVehicle = (Vehicle) vehicleComboBox.getSelectedItem();
-
-            if (selectedCustomer == null) {
-                JOptionPane.showMessageDialog(this, "Please select a customer!", "Missing Selection",
-                        JOptionPane.WARNING_MESSAGE);
-                return;
-            }
-            if (selectedVehicle == null) {
-                JOptionPane.showMessageDialog(this, "Please select a vehicle!", "Missing Selection",
-                        JOptionPane.WARNING_MESSAGE);
-                return;
-            }
-            if (selectedVehicle.isRented()) {
-                JOptionPane.showMessageDialog(this, "Selected vehicle is already rented.", "Unavailable",
-                        JOptionPane.WARNING_MESSAGE);
-                return;
-            }
-            if (daysField.getText().trim().isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Please enter the number of days!", "Missing Information",
-                        JOptionPane.WARNING_MESSAGE);
-                return;
-            }
-
-            int days = Integer.parseInt(daysField.getText().trim());
-            if (days <= 0) {
-                JOptionPane.showMessageDialog(this, "The number of days must be a positive integer!", "Invalid Value",
-                        JOptionPane.WARNING_MESSAGE);
-                return;
-            }
-
-            Reservation res = new Reservation("RES-" + System.currentTimeMillis(), selectedCustomer,
-                    selectedVehicle, days);
-            FileManager.saveReservation(res);
-
-            Invoice inv = new Invoice("INV-" + System.currentTimeMillis(), res, days, 0);
-            FileManager.saveInvoice(inv);
-
-            selectedVehicle.setRented(true);
-            selectedVehicle.setRentedDays(days);
-            FileManager.saveVehicles(vehicles);
-            updateVehicleCombo();
-            applyFiltersAndSort();
-            daysField.setText("");
-            statusLabel.setText("Reservation completed: " + inv.getInvoiceId());
-
-            JOptionPane.showMessageDialog(this,
-                    "Reservation completed successfully!\nInvoice No: " + inv.getInvoiceId(),
-                    "Operation Successful", JOptionPane.INFORMATION_MESSAGE);
-        } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this, "Please enter only numbers for the number of days!", "Format Error",
-                    JOptionPane.ERROR_MESSAGE);
-        } catch (RentalException ex) {
-            JOptionPane.showMessageDialog(this, ex.getMessage(), "Availability Error", JOptionPane.ERROR_MESSAGE);
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "System error occurred: " + ex.getMessage(), "Critical Error",
-                    JOptionPane.ERROR_MESSAGE);
-        }
-    }
-
-    private void applyFiltersAndSort() {
-        String selectedCategory = (String) categoryFilterComboBox.getSelectedItem();
-        String selectedSort = (String) priceSortComboBox.getSelectedItem();
-
-        displayedVehicles = vehicles.stream()
-                .filter(v -> selectedCategory == null || selectedCategory.equals("All Types")
-                        || v.getClass().getSimpleName().equals(selectedCategory))
-                .collect(Collectors.toList());
-
-        if ("High → Low".equals(selectedSort)) {
-            displayedVehicles.sort(Comparator.comparingDouble(Vehicle::getDailyRate).reversed());
-        } else if ("Low → High".equals(selectedSort)) {
-            displayedVehicles.sort(Comparator.comparingDouble(Vehicle::getDailyRate));
-        }
-
-        refreshTable();
-        statusLabel.setText("Filter: " + selectedCategory + " | Sort: " + selectedSort);
-    }
-
-    private void handleCancelRental() {
-        int selectedRow = vehicleTable.getSelectedRow();
-        if (selectedRow < 0) {
-            JOptionPane.showMessageDialog(this, "Please select a rented vehicle from the list first.",
-                    "Selection Required", JOptionPane.WARNING_MESSAGE);
+    private void handleCarSelection() {
+        int row = carListTable.getSelectedRow();
+        if (row < 0)
             return;
-        }
 
-        Vehicle selectedVehicle = displayedVehicles.get(selectedRow);
-        if (!selectedVehicle.isRented()) {
-            JOptionPane.showMessageDialog(this, "The selected vehicle is not currently rented.", "Invalid Action",
+        Vehicle selectedVehicle = displayedVehicles.get(row);
+        if (selectedVehicle.isRented() || selectedVehicle.isUnderMaintenance()) {
+            JOptionPane.showMessageDialog(this, "This car is currently not available.", "Unavailable",
                     JOptionPane.WARNING_MESSAGE);
             return;
         }
+        openRentalDialog(selectedVehicle);
+    }
 
-        String input = JOptionPane.showInputDialog(this,
-                "Kaç gün kullanıldı?\n(5 dk sonra iptal için 0 giriniz, 3.5 gün sonra iptal için 3 giriniz.)",
-                "Kiralama İptal Ücreti Hesaplama", JOptionPane.QUESTION_MESSAGE);
-        if (input == null) {
-            return;
+    private void openRentalDialog(Vehicle vehicle) {
+        JDialog dialog = new JDialog(this, "Rent Vehicle: " + vehicle.getBrand(), true);
+        dialog.setSize(500, 550);
+        dialog.setLayout(new GridBagLayout());
+        dialog.setLocationRelativeTo(this);
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        JTextField idField = new JTextField(15);
+        JTextField nameField = new JTextField(15);
+        JTextField surnameField = new JTextField(15);
+        JTextField daysField = new JTextField(5);
+
+        JComboBox<String> insuranceCombo = new JComboBox<>(
+                new String[] { "Basic - 300 TL/day", "Advanced - 700 TL/day", "Premium - 1200 TL/day" });
+
+        List<String> cities = branches.stream().map(Branch::getCity).distinct().collect(Collectors.toList());
+        JComboBox<String> returnCityCombo = new JComboBox<>(cities.toArray(new String[0]));
+
+        JLabel totalLabel = new JLabel("Total amount to be paid: 0 TL");
+        totalLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        totalLabel.setForeground(new Color(0, 102, 204));
+
+        int y = 0;
+        gbc.gridx = 0;
+        gbc.gridy = y;
+        dialog.add(new JLabel("Customer ID:"), gbc);
+        gbc.gridx = 1;
+        dialog.add(idField, gbc);
+        gbc.gridx = 0;
+        gbc.gridy = ++y;
+        dialog.add(new JLabel("Name:"), gbc);
+        gbc.gridx = 1;
+        dialog.add(nameField, gbc);
+        gbc.gridx = 0;
+        gbc.gridy = ++y;
+        dialog.add(new JLabel("Surname:"), gbc);
+        gbc.gridx = 1;
+        dialog.add(surnameField, gbc);
+        gbc.gridx = 0;
+        gbc.gridy = ++y;
+        dialog.add(new JLabel("Insurance Type:"), gbc);
+        gbc.gridx = 1;
+        dialog.add(insuranceCombo, gbc);
+        gbc.gridx = 0;
+        gbc.gridy = ++y;
+        dialog.add(new JLabel("Pick-up Location:"), gbc);
+        gbc.gridx = 1;
+        dialog.add(new JLabel(vehicle.getBranch().getCity()), gbc);
+        gbc.gridx = 0;
+        gbc.gridy = ++y;
+        dialog.add(new JLabel("Return Location:"), gbc);
+        gbc.gridx = 1;
+        dialog.add(returnCityCombo, gbc);
+        gbc.gridx = 0;
+        gbc.gridy = ++y;
+        dialog.add(new JLabel("Day(s) of Rent:"), gbc);
+        gbc.gridx = 1;
+        dialog.add(daysField, gbc);
+
+        JButton calcBtn = new JButton("Calculate Receipt");
+        gbc.gridx = 0;
+        gbc.gridy = ++y;
+        gbc.gridwidth = 2;
+        dialog.add(calcBtn, gbc);
+        gbc.gridy = ++y;
+        dialog.add(totalLabel, gbc);
+
+        JButton confirmBtn = new JButton("Confirm Rent");
+        confirmBtn.setBackground(new Color(34, 139, 34));
+        confirmBtn.setForeground(Color.WHITE);
+        confirmBtn.setEnabled(false);
+        gbc.gridy = ++y;
+        dialog.add(confirmBtn, gbc);
+
+        calcBtn.addActionListener(e -> {
+            try {
+                int days = Integer.parseInt(daysField.getText());
+                int insDailyCost = insuranceCombo.getSelectedIndex() == 0 ? 300
+                        : (insuranceCombo.getSelectedIndex() == 1 ? 700 : 1200);
+                double total = (days * vehicle.getDailyRate()) + 5000.0 + (days * insDailyCost);
+                totalLabel.setText("Total amount to be paid: " + total + " TL");
+                confirmBtn.setEnabled(true);
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(dialog, "Please enter a valid number of days.");
+            }
+        });
+
+        confirmBtn.addActionListener(e -> {
+            try {
+                Customer cust = new Customer(idField.getText(), nameField.getText(), surnameField.getText(),
+                        "user@mail.com", "123");
+                int days = Integer.parseInt(daysField.getText());
+
+                String rawInsStr = (String) insuranceCombo.getSelectedItem();
+                String insType = rawInsStr.split(" -")[0];
+
+                int insDailyCost = insuranceCombo.getSelectedIndex() == 0 ? 300
+                        : (insuranceCombo.getSelectedIndex() == 1 ? 700 : 1200);
+                String returnCity = (String) returnCityCombo.getSelectedItem();
+
+                Reservation res = new Reservation("RES-" + System.currentTimeMillis(), cust, vehicle, days, insType,
+                        insDailyCost, returnCity);
+
+                activeReservations.add(res);
+                lastRentedBy.put(vehicle.getPlate(), cust.getName() + " " + cust.getSurname());
+                reservedByEmployee.put(res.getReservationId(), loggedInEmployeeName);
+
+                FileManager.saveReservation(res);
+                FileManager.saveVehicles(vehicles);
+
+                dialog.dispose();
+                refreshAllTables();
+                JOptionPane.showMessageDialog(this, "Payment received. Vehicle successfully rented!");
+
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(dialog, "Error processing rental: " + ex.getMessage());
+            }
+        });
+
+        dialog.setVisible(true);
+    }
+
+    // ==========================================
+    // TAB 2: UNAVAILABLE CARS (UPDATED)
+    // ==========================================
+    private JPanel createUnavailablePanel() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+        JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JButton addCarBtn = new JButton("Add Car to Unavailable");
+        JButton historyBtn = new JButton("View Maintenance History");
+
+        addCarBtn.addActionListener(e -> openAddUnavailableCarDialog());
+        historyBtn.addActionListener(e -> openHistoryDialog());
+
+        topPanel.add(addCarBtn);
+        topPanel.add(historyBtn);
+        panel.add(topPanel, BorderLayout.NORTH);
+
+        unavailableTable = new JTable();
+        unavailableTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        unavailableTable.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2)
+                    resolveUnavailableCar();
+            }
+        });
+
+        panel.add(new JScrollPane(unavailableTable), BorderLayout.CENTER);
+
+        JLabel hint = new JLabel("Double-click a vehicle to resolve its unavailable status and add mechanic notes.");
+        hint.setFont(new Font("Segoe UI", Font.ITALIC, 12));
+        panel.add(hint, BorderLayout.SOUTH);
+        return panel;
+    }
+
+    private void updateUnavailableTable() {
+        String[] cols = { "Plate", "Brand", "Reason", "Current Renter", "Mechanic", "Added By" };
+        DefaultTableModel model = new DefaultTableModel(cols, 0) {
+            @Override
+            public boolean isCellEditable(int r, int c) {
+                return false;
+            }
+        };
+
+        for (Vehicle v : vehicles) {
+            if (v.isUnderMaintenance()) {
+                String reason = unavailableReasons.getOrDefault(v.getPlate(), "Unknown");
+                String mechanic = assignedMechanics.getOrDefault(v.getPlate(), "Pending");
+                String admin = unavailableAddedBy.getOrDefault(v.getPlate(), "System");
+
+                String currentRenter = "-";
+                if (v.isRented()) {
+                    currentRenter = lastRentedBy.getOrDefault(v.getPlate(), "Unknown");
+                }
+
+                model.addRow(new Object[] { v.getPlate(), v.getBrand(), reason, currentRenter, mechanic, admin });
+            }
         }
-        try {
-            int usedDays = Integer.parseInt(input.trim());
-            if (usedDays < 0) {
-                throw new NumberFormatException();
+        unavailableTable.setModel(model);
+    }
+
+    private void openAddUnavailableCarDialog() {
+        // Dialog penceresinin boyutunu daha geniş ve uzun yaptık ki sonuçlar rahatça
+        // sığsın
+        JDialog dialog = new JDialog(this, "Add Vehicle to Unavailable", true);
+        dialog.setSize(550, 500);
+        dialog.setLayout(new GridBagLayout());
+        dialog.setLocationRelativeTo(this);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.fill = GridBagConstraints.BOTH; // Komponentlerin alanı doldurmasını sağladık
+        gbc.weightx = 1.0;
+
+        JTextField searchField = new JTextField(20);
+        DefaultListModel<Vehicle> listModel = new DefaultListModel<>();
+        JList<Vehicle> resultList = new JList<>(listModel);
+        resultList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
+        // JScrollPane (kaydırma çubuğu ve liste alanı) boyutunu belirgin şekilde
+        // büyüttük
+        JScrollPane listScroll = new JScrollPane(resultList);
+        listScroll.setPreferredSize(new Dimension(450, 150));
+        gbc.weighty = 1.0; // Listenin dikeyde genişleyebilmesine izin verdik
+
+        JComboBox<String> reasonCombo = new JComboBox<>(new String[] { "Crash", "Maintenance" });
+        JTextField mechanicField = new JTextField(15);
+
+        // Search Logic
+        searchField.getDocument().addDocumentListener(new DocumentListener() {
+            private void filter() {
+                String text = searchField.getText().toLowerCase();
+                listModel.clear();
+                for (Vehicle v : vehicles) {
+                    if (!v.isUnderMaintenance()) {
+                        String renter = v.isRented() ? lastRentedBy.getOrDefault(v.getPlate(), "") : "";
+                        if (v.getPlate().toLowerCase().contains(text) ||
+                                v.getBrand().toLowerCase().contains(text) ||
+                                renter.toLowerCase().contains(text)) {
+                            listModel.addElement(v);
+                        }
+                    }
+                }
             }
 
-            int reservedDays = selectedVehicle.getRentedDays();
-            int chargedDays = Math.min(reservedDays, Math.max(1, usedDays + 1));
-            double fee = chargedDays * selectedVehicle.getDailyRate();
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                filter();
+            }
 
-            selectedVehicle.setRented(false);
-            selectedVehicle.setRentedDays(0);
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                filter();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                filter();
+            }
+        });
+
+        int y = 0;
+        gbc.weighty = 0; // Etiketler için esnemeyi kapattık
+        gbc.gridx = 0;
+        gbc.gridy = y;
+        dialog.add(new JLabel("Search (Plate, Model, Renter):"), gbc);
+        gbc.gridy = ++y;
+        dialog.add(searchField, gbc);
+
+        gbc.gridy = ++y;
+        gbc.weighty = 1.0; // Sadece liste alanı esneyecek
+        dialog.add(listScroll, gbc);
+
+        gbc.weighty = 0; // Diğer inputlar için esnemeyi kapattık
+        gbc.gridy = ++y;
+        dialog.add(new JLabel("Reason of Unavailability:"), gbc);
+        gbc.gridy = ++y;
+        dialog.add(reasonCombo, gbc);
+        gbc.gridy = ++y;
+        dialog.add(new JLabel("Responsible Mechanic:"), gbc);
+        gbc.gridy = ++y;
+        dialog.add(mechanicField, gbc);
+
+        JButton addBtn = new JButton("Add to List");
+        gbc.gridy = ++y;
+        gbc.fill = GridBagConstraints.NONE; // Butonun tam satırı kaplamaması için
+        gbc.anchor = GridBagConstraints.CENTER; // Butonu ortaladık
+        dialog.add(addBtn, gbc);
+
+        addBtn.addActionListener(e -> {
+            Vehicle selected = resultList.getSelectedValue();
+            if (selected == null) {
+                JOptionPane.showMessageDialog(dialog, "Please select a vehicle from the list.");
+                return;
+            }
+            if (mechanicField.getText().trim().isEmpty()) {
+                JOptionPane.showMessageDialog(dialog, "Please enter the mechanic's name.");
+                return;
+            }
+
+            // Eğer araç "Rented" durumundaysa aktif rezervasyonu bul ve iptal et
+            if (selected.isRented()) {
+                Reservation resToRemove = null;
+                for (Reservation r : activeReservations) {
+                    if (r.getVehicle().getPlate().equals(selected.getPlate())) {
+                        resToRemove = r;
+                        break;
+                    }
+                }
+
+                if (resToRemove != null) {
+                    activeReservations.remove(resToRemove);
+                    reservedByEmployee.remove(resToRemove.getReservationId());
+                    // Kullanıcıya bilgi veriyoruz
+                    JOptionPane.showMessageDialog(dialog,
+                            "Warning: This vehicle was currently rented. Its active reservation has been terminated due to unavailability.",
+                            "Reservation Terminated", JOptionPane.WARNING_MESSAGE);
+                }
+
+                // Aracın kiralık durumunu sıfırla
+                selected.setRented(false);
+                selected.setRentedDays(0);
+            }
+
+            // Aracı bakıma al ve detayları kaydet
+            selected.setUnderMaintenance(true);
+            unavailableReasons.put(selected.getPlate(), (String) reasonCombo.getSelectedItem());
+            assignedMechanics.put(selected.getPlate(), mechanicField.getText().trim());
+            unavailableAddedBy.put(selected.getPlate(), loggedInEmployeeName);
+
             FileManager.saveVehicles(vehicles);
-            updateVehicleCombo();
-            applyFiltersAndSort();
-            statusLabel.setText("Rental cancelled: " + chargedDays + " day(s) charged");
+            dialog.dispose();
+            refreshAllTables();
+        });
 
-            JOptionPane.showMessageDialog(this,
-                    "Rental cancelled.\nMinimum charge: " + chargedDays + " day(s)\nToplam: " +
-                            String.format("%.2f TL", fee),
-                    "Cancellation Completed", JOptionPane.INFORMATION_MESSAGE);
-        } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this, "Lütfen geçerli bir tam sayı girin.", "Format Error",
-                    JOptionPane.ERROR_MESSAGE);
+        // Initialize empty list
+        searchField.setText("");
+        dialog.setVisible(true);
+    }
+
+    private void resolveUnavailableCar() {
+        int row = unavailableTable.getSelectedRow();
+        if (row < 0)
+            return;
+
+        String plate = (String) unavailableTable.getValueAt(row, 0);
+        String brand = (String) unavailableTable.getValueAt(row, 1);
+        String reason = (String) unavailableTable.getValueAt(row, 2);
+        String mechanic = (String) unavailableTable.getValueAt(row, 4);
+
+        Vehicle vehicle = vehicles.stream().filter(v -> v.getPlate().equals(plate)).findFirst().orElse(null);
+        if (vehicle == null)
+            return;
+
+        JTextArea notesArea = new JTextArea(5, 20);
+        JScrollPane scrollPane = new JScrollPane(notesArea);
+
+        int result = JOptionPane.showConfirmDialog(this, scrollPane, "Enter Mechanic Notes to Resolve:",
+                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+
+        if (result == JOptionPane.OK_OPTION) {
+            String notes = notesArea.getText().trim();
+            if (notes.isEmpty())
+                notes = "No notes provided.";
+
+            // Save to history
+            MaintenanceRecord record = new MaintenanceRecord(plate, brand, reason, mechanic, notes,
+                    loggedInEmployeeName);
+            saveMaintenanceRecord(record);
+
+            // Remove from unavailable
+            vehicle.setUnderMaintenance(false);
+            unavailableReasons.remove(plate);
+            assignedMechanics.remove(plate);
+            unavailableAddedBy.remove(plate);
+
+            FileManager.saveVehicles(vehicles);
+            refreshAllTables();
+            JOptionPane.showMessageDialog(this, "Vehicle resolved and saved to Maintenance History.");
         }
     }
 
-    private void updateVehicleCombo() {
-        vehicleComboBox.setModel(new DefaultComboBoxModel<>(getAvailableVehicles().toArray(new Vehicle[0])));
+    private void openHistoryDialog() {
+        JDialog dialog = new JDialog(this, "Maintenance History", true);
+        dialog.setSize(800, 400);
+        dialog.setLocationRelativeTo(this);
+
+        String[] cols = { "Plate", "Brand", "Reason", "Mechanic", "Mechanic Notes", "Admin" };
+        DefaultTableModel model = new DefaultTableModel(cols, 0) {
+            @Override
+            public boolean isCellEditable(int r, int c) {
+                return false;
+            }
+        };
+
+        for (MaintenanceRecord rec : maintenanceHistory) {
+            model.addRow(new Object[] { rec.plate, rec.brand, rec.reason, rec.mechanic, rec.notes, rec.admin });
+        }
+
+        JTable historyTable = new JTable(model);
+        dialog.add(new JScrollPane(historyTable), BorderLayout.CENTER);
+        dialog.setVisible(true);
     }
 
-    private List<Vehicle> getAvailableVehicles() {
-        return vehicles.stream().filter(v -> !v.isRented()).collect(Collectors.toList());
+    // ==========================================
+    // TAB 3: RENTED
+    // ==========================================
+    private JPanel createRentedPanel() {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBorder(new EmptyBorder(10, 10, 10, 10));
+        rentedTable = new JTable();
+        panel.add(new JScrollPane(rentedTable), BorderLayout.CENTER);
+        return panel;
     }
 
-    private void updateCancelButtonState() {
-        int selectedRow = vehicleTable.getSelectedRow();
-        boolean enabled = selectedRow >= 0 && displayedVehicles.get(selectedRow).isRented();
-        cancelRentalButton.setEnabled(enabled);
+    private void updateRentedTable() {
+        String[] cols = { "Car Info", "Customer", "Days Info", "Employee" };
+        DefaultTableModel model = new DefaultTableModel(cols, 0) {
+            @Override
+            public boolean isCellEditable(int r, int c) {
+                return false;
+            }
+        };
+
+        // Tarih formatımızı "01.01.2026" şeklinde ayarlıyoruz
+        java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy");
+
+        for (Reservation res : activeReservations) {
+            Vehicle v = res.getVehicle();
+            if (v.isRented()) {
+                String carInfo = v.getBrand() + " (" + v.getPlate() + ")";
+                String cust = res.getCustomer().getName() + " " + res.getCustomer().getSurname();
+
+                String daysStr = res.getDays() + " Days Total"; // Hata durumunda varsayılan metin
+
+                try {
+                    // ID'nin içindeki milisaniyeyi (örneğin RES-17000000000) çekiyoruz
+                    String[] parts = res.getReservationId().split("-");
+                    if (parts.length > 1) {
+                        long timestamp = Long.parseLong(parts[1]);
+
+                        // Convert millisecond to LocalDate
+                        java.time.Instant instant = java.time.Instant.ofEpochMilli(timestamp);
+                        java.time.LocalDate startDate = instant.atZone(java.time.ZoneId.systemDefault()).toLocalDate();
+
+                        // Adding the number of days to the start date to get the return date
+                        java.time.LocalDate returnDate = startDate.plusDays(res.getDays());
+
+                        daysStr = res.getDays() + " (Return: " + returnDate.format(formatter) + ")";
+                    }
+                } catch (Exception e) {
+                    System.out.println("Error occurred while processing reservation: " + e.getMessage());
+                }
+
+                String employeeName = reservedByEmployee.getOrDefault(res.getReservationId(), loggedInEmployeeName);
+
+                model.addRow(new Object[] { carInfo, cust, daysStr, employeeName });
+            }
+        }
+        rentedTable.setModel(model);
+    }
+
+    // ==========================================
+    // TAB 4: RETURN & LOCATION UPDATE FIX
+    // ==========================================
+    private JPanel createReturnPanel() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBorder(BorderFactory.createTitledBorder("Process Vehicle Return"));
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(15, 15, 15, 15);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.anchor = GridBagConstraints.WEST;
+
+        returnReservationCombo = new JComboBox<>();
+        returnReservationCombo.addActionListener(e -> populateReturnDetails());
+
+        retCarLbl = new JLabel("-");
+        retDaysLbl = new JLabel("-");
+        retPickupLbl = new JLabel("-");
+        retDropoffLbl = new JLabel("-");
+        retInsuranceLbl = new JLabel("-");
+        retDepositLbl = new JLabel("-");
+
+        washingCheck = new JCheckBox("Washing Fee (500 TL)");
+        missingObjectCheck = new JCheckBox("Missing Object (2000 TL)");
+
+        int y = 0;
+        gbc.gridx = 0;
+        gbc.gridy = y;
+        panel.add(new JLabel("Select Customer:"), gbc);
+        gbc.gridx = 1;
+        panel.add(returnReservationCombo, gbc);
+        gbc.gridx = 0;
+        gbc.gridy = ++y;
+        panel.add(new JLabel("Rented Vehicle:"), gbc);
+        gbc.gridx = 1;
+        panel.add(retCarLbl, gbc);
+        gbc.gridx = 0;
+        gbc.gridy = ++y;
+        panel.add(new JLabel("Total Days:"), gbc);
+        gbc.gridx = 1;
+        panel.add(retDaysLbl, gbc);
+        gbc.gridx = 0;
+        gbc.gridy = ++y;
+        panel.add(new JLabel("Pick-up City:"), gbc);
+        gbc.gridx = 1;
+        panel.add(retPickupLbl, gbc);
+        gbc.gridx = 0;
+        gbc.gridy = ++y;
+        panel.add(new JLabel("Drop-off City:"), gbc);
+        gbc.gridx = 1;
+        panel.add(retDropoffLbl, gbc);
+        gbc.gridx = 0;
+        gbc.gridy = ++y;
+        panel.add(new JLabel("Insurance Type:"), gbc);
+        gbc.gridx = 1;
+        panel.add(retInsuranceLbl, gbc);
+        gbc.gridx = 0;
+        gbc.gridy = ++y;
+        panel.add(new JLabel("Deposit Held:"), gbc);
+        gbc.gridx = 1;
+        panel.add(retDepositLbl, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = ++y;
+        gbc.gridwidth = 2;
+        panel.add(new JSeparator(), gbc);
+        gbc.gridy = ++y;
+        panel.add(new JLabel("Deductions:"), gbc);
+        gbc.gridy = ++y;
+        panel.add(washingCheck, gbc);
+        gbc.gridy = ++y;
+        panel.add(missingObjectCheck, gbc);
+
+        JButton returnBtn = new JButton("Process Return & Generate Invoice");
+        returnBtn.setBackground(new Color(200, 50, 50));
+        returnBtn.setForeground(Color.WHITE);
+        returnBtn.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        gbc.gridy = ++y;
+        panel.add(returnBtn, gbc);
+
+        returnBtn.addActionListener(e -> processReturnAction());
+
+        JPanel wrapper = new JPanel(new BorderLayout());
+        wrapper.add(panel, BorderLayout.NORTH);
+        return wrapper;
+    }
+
+    private void populateReturnCombo() {
+        returnReservationCombo.removeAllItems();
+        for (Reservation res : activeReservations) {
+            returnReservationCombo.addItem(res.getCustomer().getName() + " " + res.getCustomer().getSurname() + " - "
+                    + res.getVehicle().getPlate());
+        }
+    }
+
+    private void populateReturnDetails() {
+        int idx = returnReservationCombo.getSelectedIndex();
+        if (idx < 0 || idx >= activeReservations.size()) {
+            clearReturnDetails();
+            return;
+        }
+
+        Reservation res = activeReservations.get(idx);
+        retCarLbl.setText(res.getVehicle().getBrand() + " (" + res.getVehicle().getPlate() + ")");
+        retDaysLbl.setText(String.valueOf(res.getDays()));
+        retPickupLbl.setText(res.getPickUpLocation());
+        retDropoffLbl.setText(res.getReturnLocation());
+        retInsuranceLbl.setText(res.getInsuranceType());
+        retDepositLbl.setText(res.getDepositAmount() + " TL");
+
+        washingCheck.setSelected(false);
+        missingObjectCheck.setSelected(false);
+    }
+
+    private void clearReturnDetails() {
+        retCarLbl.setText("-");
+        retDaysLbl.setText("-");
+        retPickupLbl.setText("-");
+        retDropoffLbl.setText("-");
+        retInsuranceLbl.setText("-");
+        retDepositLbl.setText("-");
+    }
+
+    private void processReturnAction() {
+        int idx = returnReservationCombo.getSelectedIndex();
+        if (idx < 0)
+            return;
+
+        Reservation res = activeReservations.get(idx);
+        Vehicle vehicle = res.getVehicle();
+
+        Invoice inv = new Invoice("INV-" + System.currentTimeMillis(), res, washingCheck.isSelected(),
+                missingObjectCheck.isSelected());
+        FileManager.saveInvoice(inv);
+
+        JOptionPane.showMessageDialog(this, inv.getFormattedInvoice(), "Return & Invoice Summary",
+                JOptionPane.INFORMATION_MESSAGE);
+
+        // VITAL FEATURE: Update the car's branch to the drop-off location
+        String dropoffCity = res.getReturnLocation();
+        for (Branch b : branches) {
+            if (b.getCity().equalsIgnoreCase(dropoffCity)) {
+                vehicle.setBranch(b);
+                break;
+            }
+        }
+
+        vehicle.setRented(false);
+        vehicle.setRentedDays(0);
+        activeReservations.remove(idx);
+        reservedByEmployee.remove(res.getReservationId());
+
+        FileManager.saveVehicles(vehicles);
+        refreshAllTables();
+    }
+
+    private void refreshAllTables() {
+        applyCarFilters();
+        updateUnavailableTable();
+        updateRentedTable();
+        populateReturnCombo();
     }
 
     public static void main(String[] args) {
-
         SwingUtilities.invokeLater(() -> {
             RentalGUI gui = new RentalGUI();
             gui.setVisible(true);
