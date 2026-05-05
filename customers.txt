@@ -13,4 +13,5 @@
 13859302933,Mehmet,Simsek,user@mail.com,123,Bronze
 11338822992,Yasin,Yilmaz,user@mail.com,123,Bronze
 12305930293,Nuriye,Sonmez,user@mail.com,123,Bronze
-13059323033,Abuziddin,Killibacak,user@mail.com,123,Bronze
+13059323033,Abuziddin,Killibacak,user@mail.com,123,Silver
+

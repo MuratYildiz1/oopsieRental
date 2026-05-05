@@ -240,3 +240,49 @@ FINAL REFUND TO CUSTOMER: 2500.0 TL
 
 =========================================
 
+---------- RETURN & REFUND INVOICE ----------
+Invoice No: INV-1778007450117
+Date: Tue May 05 21:57:30 GMT+03:00 2026
+Customer: Abuziddin Killibacak
+Loyalty Tier: Silver (0 points)
+Vehicle: Audi A6 (34-IST-003)
+Pick-up City: Istanbul
+Drop-off City: Istanbul
+-----------------------------------------
+Rental Cost: 84000,00 TL
+Insurance: 14000,00 TL
+Subtotal: 98000,00 TL
+Loyalty Discount (10%): -9800,00 TL
+After Discount: 88200,00 TL
+Initial Deposit: 5000.0 TL
+Deductions:
+- Washing Fee: 500 TL
+-----------------------------------------
+FINAL REFUND TO CUSTOMER: 4500,00 TL
+=========================================
+
+=========================================
+
+---------- RETURN & REFUND INVOICE ----------
+Invoice No: INV-1778007657500
+Date: Tue May 05 22:00:57 GMT+03:00 2026
+Customer: Abuziddin Killibacak
+Loyalty Tier: Silver (40 points)
+Vehicle: Mercedes Vito (34-IST-301)
+Pick-up City: Istanbul
+Drop-off City: Isparta
+-----------------------------------------
+Rental Cost: 20800,00 TL
+Insurance: 7000,00 TL
+Subtotal: 27800,00 TL
+Loyalty Discount (10%): -2780,00 TL
+After Discount: 25020,00 TL
+Initial Deposit: 5000.0 TL
+Deductions:
+- No deductions.
+-----------------------------------------
+FINAL REFUND TO CUSTOMER: 5000,00 TL
+=========================================
+
+=========================================
+

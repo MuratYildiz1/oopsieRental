@@ -393,8 +393,27 @@ public class RentalGUI extends JFrame {
                 int days = Integer.parseInt(daysField.getText());
                 int insDailyCost = insuranceCombo.getSelectedIndex() == 0 ? 300
                         : (insuranceCombo.getSelectedIndex() == 1 ? 700 : 1200);
-                double total = (days * vehicle.getDailyRate()) + 5000.0 + (days * insDailyCost);
-                totalLabel.setText("Total amount to be paid: " + total + " TL");
+
+                // Get customer by ID to determine loyalty discount
+                String customerId = idField.getText().trim();
+                Customer cust = customers.stream()
+                        .filter(c -> c.getId().equals(customerId))
+                        .findFirst()
+                        .orElse(null);
+
+                double discountRate = (cust != null) ? cust.getDiscountRate() : 0.0;
+                double baseRental = days * vehicle.getDailyRate();
+                double insuranceCost = days * insDailyCost;
+                double subtotal = baseRental + insuranceCost;
+                double discountAmount = subtotal * discountRate;
+                double discountedSubtotal = subtotal - discountAmount;
+                double total = discountedSubtotal + 5000.0;
+
+                String tierInfo = (cust != null)
+                        ? " (" + cust.getLoyaltyTier() + " - " + String.format("%.0f%%", discountRate * 100)
+                                + " discount)"
+                        : " (Bronze - 0% discount)";
+                totalLabel.setText("Total amount to be paid: " + String.format("%.2f", total) + " TL" + tierInfo);
                 confirmBtn.setEnabled(true);
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(dialog, "Please enter a valid number of days.");
@@ -409,9 +428,22 @@ public class RentalGUI extends JFrame {
                     return;
                 }
 
-                Customer cust = new Customer(idField.getText(), nameField.getText(), surnameField.getText(),
-                        "user@mail.com", "123");
+                String customerId = idField.getText().trim();
                 int days = Integer.parseInt(daysField.getText());
+
+                // Try to find existing customer by ID to get correct loyalty tier
+                Customer cust = customers.stream()
+                        .filter(c -> c.getId().equals(customerId))
+                        .findFirst()
+                        .orElse(null);
+
+                // If customer not found, create new one
+                if (cust == null) {
+                    cust = new Customer(customerId, nameField.getText(), surnameField.getText(),
+                            "user@mail.com", "123");
+                    customers.add(cust);
+                    FileManager.saveCustomer(cust);
+                }
 
                 String rawInsStr = (String) insuranceCombo.getSelectedItem();
                 String insType = rawInsStr.split(" -")[0];
@@ -431,16 +463,16 @@ public class RentalGUI extends JFrame {
                 vehicle.setRented(true);
                 vehicle.setRentedDays(days);
 
-                customers.add(cust);
-                FileManager.saveCustomer(cust);
-
                 FileManager.saveReservation(res);
                 FileManager.saveVehicles(vehicles);
+                FileManager.saveCustomer(cust);
 
                 dialog.dispose();
                 refreshAllTables();
                 JOptionPane.showMessageDialog(this,
-                        "Payment received. Vehicle rented and Customer saved successfully!");
+                        "Payment received. Vehicle rented successfully!\n" +
+                                "Customer: " + cust.getName() + " " + cust.getSurname() + "\n" +
+                                "Loyalty Tier: " + cust.getLoyaltyTier() + " (" + cust.getLoyaltyPoints() + " points)");
 
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(dialog, "Error processing rental: " + ex.getMessage());

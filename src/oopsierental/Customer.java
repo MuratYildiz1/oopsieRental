@@ -69,6 +69,18 @@ public class Customer {
 
     public void addPoints(int points) {
         this.loyaltyPoints += points;
+        updateTier();
+    }
+
+    // Automatically upgrade tier based on loyalty points
+    private void updateTier() {
+        if (loyaltyPoints >= 100) {
+            this.loyaltyTier = "Gold";
+        } else if (loyaltyPoints >= 20) {
+            this.loyaltyTier = "Silver";
+        } else {
+            this.loyaltyTier = "Bronze";
+        }
     }
 
     @Override

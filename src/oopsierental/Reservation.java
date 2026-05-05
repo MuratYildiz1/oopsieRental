@@ -35,6 +35,9 @@ public class Reservation {
 
         checkAvailability();
 
+        // Award loyalty points: 10 points per rental
+        customer.addPoints(10);
+
         this.totalPrice = calculateFinalAmount();
         vehicle.setRented(true);
         vehicle.setRentedDays(days);
@@ -65,8 +68,16 @@ public class Reservation {
 
     private double calculateFinalAmount() {
         double baseRent = vehicle.calculateRent(days);
-        // Final amount: Base Rent + Insurance + Deposit
-        return baseRent + (insuranceDailyCost * days) + DEPOSIT_AMOUNT;
+        double insuranceCost = insuranceDailyCost * days;
+        double subtotal = baseRent + insuranceCost;
+
+        // Apply loyalty discount to rental + insurance (deposit excluded)
+        double discountRate = customer.getDiscountRate();
+        double discountAmount = subtotal * discountRate;
+        double discountedSubtotal = subtotal - discountAmount;
+
+        // Final amount: Discounted Rent + Insurance + Deposit
+        return discountedSubtotal + DEPOSIT_AMOUNT;
     }
 
     public String getReservationId() {
