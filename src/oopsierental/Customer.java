@@ -67,9 +67,26 @@ public class Customer {
         return loyaltyPoints;
     }
 
+    public void setLoyaltyPoints(int loyaltyPoints) {
+        this.loyaltyPoints = loyaltyPoints;
+        updateLoyaltyTier();
+    }
+
     public void addPoints(int points) {
         this.loyaltyPoints += points;
+        updateLoyaltyTier();
     }
+
+    public void updateLoyaltyTier() {
+        if (loyaltyPoints >= 100) {
+            this.loyaltyTier = "Gold";
+        } else if (loyaltyPoints >= 20) {
+            this.loyaltyTier = "Silver";
+        } else {
+            this.loyaltyTier = "Bronze";
+        }
+    }
+
 
     @Override
     public String toString() {

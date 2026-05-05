@@ -42,7 +42,7 @@ public class Reservation {
 
     // Constructor for loading from file (skips availability check)
     public Reservation(String reservationId, Customer customer, Vehicle vehicle, int days,
-            String insuranceType, int insuranceDailyCost, String returnLocation, String employee, boolean isLoading) {
+            String insuranceType, double insuranceDailyCost, String returnLocation, String employee, boolean isLoading) {
         this.reservationId = reservationId;
         this.customer = customer;
         this.vehicle = vehicle;
@@ -65,12 +65,19 @@ public class Reservation {
 
     private double calculateFinalAmount() {
         double baseRent = vehicle.calculateRent(days);
-        // Final amount: Base Rent + Insurance + Deposit
-        return baseRent + (insuranceDailyCost * days) + DEPOSIT_AMOUNT;
+        double insurance = insuranceDailyCost * days;
+        double subtotal = baseRent + insurance;
+        double discount = subtotal * customer.getDiscountRate();
+        // Final amount: Subtotal after discount + Deposit
+        return (subtotal - discount) + DEPOSIT_AMOUNT;
     }
 
     public String getReservationId() {
         return reservationId;
+    }
+
+    public double getDepositAmount() {
+        return DEPOSIT_AMOUNT;
     }
 
     public Customer getCustomer() {
@@ -109,8 +116,18 @@ public class Reservation {
         return employee;
     }
 
-    public double getDepositAmount() {
-        return DEPOSIT_AMOUNT;
+    public double getSubtotalBeforeDiscount() {
+        double baseRent = vehicle.calculateRent(days);
+        double insurance = insuranceDailyCost * days;
+        return baseRent + insurance;
+    }
+
+    public double getDiscountAmount() {
+        return getSubtotalBeforeDiscount() * customer.getDiscountRate();
+    }
+
+    public double getSubtotalAfterDiscount() {
+        return getSubtotalBeforeDiscount() - getDiscountAmount();
     }
 
     @Override

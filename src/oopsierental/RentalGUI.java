@@ -64,6 +64,7 @@ public class RentalGUI extends JFrame {
     private JLabel statusLabel;
 
     // Search fields
+    private JTextField carSearchField;
     private JTextField rentedSearchField;
     private JTextField returnSearchField;
 
@@ -216,6 +217,24 @@ public class RentalGUI extends JFrame {
         cities.add(0, "All Cities");
         cityFilterCombo = new JComboBox<>(cities.toArray(new String[0]));
 
+        carSearchField = new JTextField(18);
+        carSearchField.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                applyCarFilters();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                applyCarFilters();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                applyCarFilters();
+            }
+        });
+
         JButton applyBtn = new JButton("Apply Filters");
         applyBtn.addActionListener(e -> applyCarFilters());
 
@@ -225,6 +244,8 @@ public class RentalGUI extends JFrame {
         filterPanel.add(priceSortCombo);
         filterPanel.add(new JLabel("City:"));
         filterPanel.add(cityFilterCombo);
+        filterPanel.add(new JLabel("Search:"));
+        filterPanel.add(carSearchField);
         filterPanel.add(applyBtn);
 
         panel.add(filterPanel, BorderLayout.NORTH);
@@ -254,9 +275,13 @@ public class RentalGUI extends JFrame {
         String sort = (String) priceSortCombo.getSelectedItem();
         String city = (String) cityFilterCombo.getSelectedItem();
 
+        String search = carSearchField != null ? carSearchField.getText().trim().toLowerCase() : "";
         displayedVehicles = vehicles.stream()
                 .filter(v -> type.equals("All Types") || v.getClass().getSimpleName().equals(type))
                 .filter(v -> city.equals("All Cities") || v.getBranch().getCity().equals(city))
+                .filter(v -> search.isEmpty() || v.getBrand().toLowerCase().contains(search)
+                        || v.getClass().getSimpleName().toLowerCase().contains(search)
+                        || v.getPlate().toLowerCase().contains(search))
                 .collect(Collectors.toList());
 
         if (sort.equals("Price: High to Low")) {
@@ -300,7 +325,7 @@ public class RentalGUI extends JFrame {
 
     private void openRentalDialog(Vehicle vehicle) {
         JDialog dialog = new JDialog(this, "Rent Vehicle: " + vehicle.getBrand(), true);
-        dialog.setSize(500, 550);
+        dialog.setSize(650, 620);
         dialog.setLayout(new GridBagLayout());
         dialog.setLocationRelativeTo(this);
 
@@ -326,9 +351,10 @@ public class RentalGUI extends JFrame {
         cities.add(0, "--- Select City ---");
         JComboBox<String> returnCityCombo = new JComboBox<>(cities.toArray(new String[0]));
 
-        JLabel totalLabel = new JLabel("Total amount to be paid: 0 TL");
+        JLabel totalLabel = new JLabel("<html>Total amount to be paid: 0 TL</html>");
         totalLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
         totalLabel.setForeground(new Color(0, 102, 204));
+        totalLabel.setPreferredSize(new Dimension(580, 50));
 
         int y = 0;
         gbc.gridx = 0;
@@ -390,11 +416,22 @@ public class RentalGUI extends JFrame {
                     return;
                 }
 
+                String customerId = idField.getText().trim();
+                Customer cust = customers.stream().filter(c -> c.getId().equals(customerId)).findFirst().orElse(null);
+                if (cust == null && !customerId.isEmpty()) {
+                    // For new customer, assume Bronze
+                    cust = new Customer(customerId, "", "", "", "");
+                }
+
                 int days = Integer.parseInt(daysField.getText());
                 int insDailyCost = insuranceCombo.getSelectedIndex() == 0 ? 300
                         : (insuranceCombo.getSelectedIndex() == 1 ? 700 : 1200);
-                double total = (days * vehicle.getDailyRate()) + 5000.0 + (days * insDailyCost);
-                totalLabel.setText("Total amount to be paid: " + total + " TL");
+                double subtotal = (days * vehicle.getDailyRate()) + (days * insDailyCost);
+                double discount = (cust != null) ? subtotal * cust.getDiscountRate() : 0;
+                double finalSubtotal = subtotal - discount;
+                double total = finalSubtotal + 5000.0;
+                String discountText = (cust != null && discount > 0) ? String.format(" (Discount: %.0f TL - %s)", discount, cust.getLoyaltyTier()) : "";
+                totalLabel.setText(String.format("Subtotal: %.0f TL%s, Deposit: 5000 TL, Total: %.0f TL", finalSubtotal, discountText, total));
                 confirmBtn.setEnabled(true);
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(dialog, "Please enter a valid number of days.");
@@ -409,8 +446,20 @@ public class RentalGUI extends JFrame {
                     return;
                 }
 
-                Customer cust = new Customer(idField.getText(), nameField.getText(), surnameField.getText(),
-                        "user@mail.com", "123");
+                String customerId = idField.getText().trim();
+                if (customerId.isEmpty()) {
+                    JOptionPane.showMessageDialog(dialog, "Please enter a valid Customer ID.", "Warning",
+                            JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+
+                Customer cust = customers.stream().filter(c -> c.getId().equals(customerId)).findFirst().orElse(null);
+                boolean isNewCustomer = (cust == null);
+                if (isNewCustomer) {
+                    cust = new Customer(customerId, nameField.getText(), surnameField.getText(),
+                            "user@mail.com", "123");
+                }
+
                 int days = Integer.parseInt(daysField.getText());
 
                 String rawInsStr = (String) insuranceCombo.getSelectedItem();
@@ -419,6 +468,10 @@ public class RentalGUI extends JFrame {
                 int insDailyCost = insuranceCombo.getSelectedIndex() == 0 ? 300
                         : (insuranceCombo.getSelectedIndex() == 1 ? 700 : 1200);
                 String returnCity = (String) returnCityCombo.getSelectedItem();
+
+                String invoiceTier = cust.getLoyaltyTier();
+                int invoicePointsBefore = cust.getLoyaltyPoints();
+                double invoiceDiscountRate = cust.getDiscountRate();
 
                 Reservation res = new Reservation("RES-" + System.currentTimeMillis(), cust, vehicle, days, insType,
                         insDailyCost, returnCity, loggedInEmployeeName);
@@ -431,16 +484,41 @@ public class RentalGUI extends JFrame {
                 vehicle.setRented(true);
                 vehicle.setRentedDays(days);
 
-                customers.add(cust);
-                FileManager.saveCustomer(cust);
+                // Add loyalty points for rental after creating the invoice display values
+                cust.addPoints(10);
+
+                if (isNewCustomer) {
+                    customers.add(cust);
+                }
+                FileManager.saveAllCustomers(customers);
 
                 FileManager.saveReservation(res);
                 FileManager.saveVehicles(vehicles);
 
                 dialog.dispose();
                 refreshAllTables();
-                JOptionPane.showMessageDialog(this,
-                        "Payment received. Vehicle rented and Customer saved successfully!");
+                double discountAmount = res.getSubtotalBeforeDiscount() * invoiceDiscountRate;
+                double subtotalAfterDiscount = res.getSubtotalBeforeDiscount() - discountAmount;
+                double totalPaid = subtotalAfterDiscount + res.getDepositAmount();
+                String invoiceDetails = String.format(
+                    "Payment received. Vehicle rented successfully!\n\n" +
+                    "Customer: %s (%s)\n" +
+                    "Loyalty Points before this rental: %d\n" +
+                    "Subtotal (before discount): %.0f TL\n" +
+                    "Discount (%.0f%% - %s): %.0f TL\n" +
+                    "Subtotal (after discount): %.0f TL\n" +
+                    "Deposit: %.0f TL\n" +
+                    "Total Paid: %.0f TL",
+                    cust.getName() + " " + cust.getSurname(), invoiceTier,
+                    invoicePointsBefore,
+                    res.getSubtotalBeforeDiscount(),
+                    invoiceDiscountRate * 100, invoiceTier,
+                    discountAmount,
+                    subtotalAfterDiscount,
+                    res.getDepositAmount(),
+                    totalPaid
+                );
+                JOptionPane.showMessageDialog(this, invoiceDetails);
 
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(dialog, "Error processing rental: " + ex.getMessage());
@@ -1053,7 +1131,7 @@ public class RentalGUI extends JFrame {
         Vehicle vehicle = res.getVehicle();
 
         Invoice inv = new Invoice("INV-" + System.currentTimeMillis(), res, washingCheck.isSelected(),
-                missingObjectCheck.isSelected());
+                missingObjectCheck.isSelected(), res.getTotalPrice() - res.getDepositAmount());
         FileManager.saveInvoice(inv);
 
         JOptionPane.showMessageDialog(this, inv.getFormattedInvoice(), "Return & Invoice Summary",

@@ -11,9 +11,9 @@ public class Van extends Vehicle {
         super(plate, brand, dailyRate, branch);
     }
 
-    // Adds a 30% surcharge for Van models
+    // No additional surcharge - use base daily rate
     @Override
     public double calculateRent(int days) {
-        return dailyRate * days * 1.3;
+        return dailyRate * days;
     }
 }

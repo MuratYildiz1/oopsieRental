@@ -212,10 +212,13 @@ public class FileManager {
         return list;
     }
 
-    public static void saveCustomer(Customer c) {
-        try (PrintWriter out = new PrintWriter(new FileWriter(CUSTOMER_FILE, true))) {
-            out.println(c.getId() + "," + c.getName() + "," + c.getSurname() + "," + c.getEmail() + ","
-                    + c.getPassword() + "," + c.getLoyaltyTier());
+    public static void saveAllCustomers(ArrayList<Customer> customers) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(CUSTOMER_FILE, false))) {
+            for (Customer c : customers) {
+                writer.write(c.getId() + "," + c.getName() + "," + c.getSurname() + "," + c.getEmail() + ","
+                        + c.getPassword() + "," + c.getLoyaltyTier() + "," + c.getLoyaltyPoints());
+                writer.newLine();
+            }
         } catch (IOException e) {
             System.err.println("File writing error: " + e.getMessage());
         }
@@ -234,7 +237,22 @@ public class FileManager {
                 if (data.length >= 6) {
                     c.setLoyaltyTier(data[5]);
                 }
-                list.add(c);
+                if (data.length >= 7) {
+                    c.setLoyaltyPoints(Integer.parseInt(data[6]));
+                }
+
+                int existingIndex = -1;
+                for (int i = 0; i < list.size(); i++) {
+                    if (list.get(i).getId().equals(c.getId())) {
+                        existingIndex = i;
+                        break;
+                    }
+                }
+                if (existingIndex >= 0) {
+                    list.set(existingIndex, c);
+                } else {
+                    list.add(c);
+                }
             }
         } catch (Exception e) {
             System.out.println("No registered customers yet or file could not be read.");
@@ -277,7 +295,7 @@ public class FileManager {
                 String plate = data[2];
                 int days = Integer.parseInt(data[3]);
                 String insType = data[4];
-                int insDailyCost = (int) Double.parseDouble(data[5]);
+                double insDailyCost = Double.parseDouble(data[5]);
                 String returnCity = data[6];
                 String employee = data[7];
 

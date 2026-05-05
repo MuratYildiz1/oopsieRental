@@ -15,10 +15,16 @@ public class Invoice {
     private double totalDeductions;
     private double finalRefund;
     private String deductionDetails;
+    private double rentalAmountPaid;
 
     public Invoice(String invoiceId, Reservation reservation, boolean hasWashingFee, boolean hasMissingObject) {
+        this(invoiceId, reservation, hasWashingFee, hasMissingObject, 0.0);
+    }
+
+    public Invoice(String invoiceId, Reservation reservation, boolean hasWashingFee, boolean hasMissingObject, double rentalAmountPaid) {
         this.invoiceId = invoiceId;
         this.reservation = reservation;
+        this.rentalAmountPaid = rentalAmountPaid;
         this.generationDate = new Date();
         this.totalDeductions = 0;
 
@@ -48,12 +54,15 @@ public class Invoice {
         sb.append("Invoice No: ").append(invoiceId).append("\n");
         sb.append("Date: ").append(generationDate.toString()).append("\n");
         sb.append("Customer: ").append(reservation.getCustomer().getName()).append(" ")
-                .append(reservation.getCustomer().getSurname()).append("\n");
+                .append(reservation.getCustomer().getSurname()).append(" (")
+                .append(reservation.getCustomer().getLoyaltyTier()).append(" - ")
+                .append(reservation.getCustomer().getLoyaltyPoints()).append(" points)\n");
         sb.append("Vehicle: ").append(reservation.getVehicle().getBrand()).append(" (")
                 .append(reservation.getVehicle().getPlate()).append(")\n");
         sb.append("Pick-up City: ").append(reservation.getPickUpLocation()).append("\n");
         sb.append("Drop-off City: ").append(reservation.getReturnLocation()).append("\n");
         sb.append("-----------------------------------------\n");
+        sb.append("Rental Amount Paid (with discount & insurance): ").append(String.format("%.0f", rentalAmountPaid)).append(" TL\n");
         sb.append("Initial Deposit: ").append(reservation.getDepositAmount()).append(" TL\n");
         sb.append("Deductions:\n").append(deductionDetails);
         sb.append("-----------------------------------------\n");

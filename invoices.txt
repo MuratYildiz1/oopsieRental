@@ -240,3 +240,125 @@ FINAL REFUND TO CUSTOMER: 2500.0 TL
 
 =========================================
 
+---------- RETURN & REFUND INVOICE ----------
+Invoice No: INV-1778012037787
+Date: Tue May 05 23:13:57 EET 2026
+Customer: kerem kerem (Silver - 30 points)
+Vehicle: Porsche Macan (07-ANT-001)
+Pick-up City: Antalya
+Drop-off City: Adiyaman
+-----------------------------------------
+Initial Deposit: 5000.0 TL
+Deductions:
+- No deductions.
+-----------------------------------------
+FINAL REFUND TO CUSTOMER: 5000.0 TL
+=========================================
+
+=========================================
+
+---------- RETURN & REFUND INVOICE ----------
+Invoice No: INV-1778012046824
+Date: Tue May 05 23:14:06 EET 2026
+Customer: kerem kerem (Silver - 30 points)
+Vehicle: Nissan Juke (48-MUG-101)
+Pick-up City: Mugla
+Drop-off City: Afyonkarahisar
+-----------------------------------------
+Initial Deposit: 5000.0 TL
+Deductions:
+- Missing Object: 2000 TL
+-----------------------------------------
+FINAL REFUND TO CUSTOMER: 3000.0 TL
+=========================================
+
+=========================================
+
+---------- RETURN & REFUND INVOICE ----------
+Invoice No: INV-1778012055402
+Date: Tue May 05 23:14:15 EET 2026
+Customer: kerem kerem (Silver - 30 points)
+Vehicle: Renault Symbol (45-KOP-201)
+Pick-up City: Adana
+Drop-off City: Kahramanmaras
+-----------------------------------------
+Initial Deposit: 5000.0 TL
+Deductions:
+- Washing Fee: 500 TL
+- Missing Object: 2000 TL
+-----------------------------------------
+FINAL REFUND TO CUSTOMER: 2500.0 TL
+=========================================
+
+=========================================
+
+---------- RETURN & REFUND INVOICE ----------
+Invoice No: INV-1778013035899
+Date: Tue May 05 23:30:35 EET 2026
+Customer: murat murat (Silver - 60 points)
+Vehicle: BMW X5 (34-IST-907)
+Pick-up City: Istanbul
+Drop-off City: Izmir
+-----------------------------------------
+Initial Deposit: 5000.0 TL
+Deductions:
+- No deductions.
+-----------------------------------------
+FINAL REFUND TO CUSTOMER: 5000.0 TL
+=========================================
+
+=========================================
+
+---------- RETURN & REFUND INVOICE ----------
+Invoice No: INV-1778013129116
+Date: Tue May 05 23:32:09 EET 2026
+Customer: murat murat (Silver - 70 points)
+Vehicle: BMW X5 (34-IST-907)
+Pick-up City: Izmir
+Drop-off City: Izmir
+-----------------------------------------
+Initial Deposit: 5000.0 TL
+Deductions:
+- No deductions.
+-----------------------------------------
+FINAL REFUND TO CUSTOMER: 5000.0 TL
+=========================================
+
+=========================================
+
+---------- RETURN & REFUND INVOICE ----------
+Invoice No: INV-1778013427834
+Date: Tue May 05 23:37:07 EET 2026
+Customer: murat murat (Silver - 80 points)
+Vehicle: BMW X5 (34-IST-907)
+Pick-up City: Izmir
+Drop-off City: Izmir
+-----------------------------------------
+Rental Amount Paid (with discount & insurance): 75600 TL
+Initial Deposit: 5000.0 TL
+Deductions:
+- No deductions.
+-----------------------------------------
+FINAL REFUND TO CUSTOMER: 5000.0 TL
+=========================================
+
+=========================================
+
+---------- RETURN & REFUND INVOICE ----------
+Invoice No: INV-1778013814222
+Date: Tue May 05 23:43:34 EET 2026
+Customer: murat murat (Gold - 100 points)
+Vehicle: Volvo S90 (06-ANK-001)
+Pick-up City: Ankara
+Drop-off City: Izmir
+-----------------------------------------
+Rental Amount Paid (with discount & insurance): 28800 TL
+Initial Deposit: 5000.0 TL
+Deductions:
+- No deductions.
+-----------------------------------------
+FINAL REFUND TO CUSTOMER: 5000.0 TL
+=========================================
+
+=========================================
+

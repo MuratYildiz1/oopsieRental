@@ -11,9 +11,9 @@ public class SUV extends Vehicle {
         super(plate, brand, dailyRate, branch);
     }
 
-    // Adds a 20% surcharge for SUV models
+    // No additional surcharge - use base daily rate
     @Override
     public double calculateRent(int days) {
-        return dailyRate * days * 1.2;
+        return dailyRate * days;
     }
 }

@@ -11,9 +11,9 @@ public class Luxury extends Vehicle {
         super(plate, brand, dailyRate, branch);
     }
 
-    // Adds a 50% surcharge specifically for Luxury models
+    // No additional surcharge - use base daily rate
     @Override
     public double calculateRent(int days) {
-        return dailyRate * days * 1.5;
+        return dailyRate * days;
     }
 }
