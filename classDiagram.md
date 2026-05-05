@@ -20,6 +20,8 @@ classDiagram
         +calculateRent(days: int) double
         +calculateRent(days: int, discount: double) double
         +addMileage(km: int)
+        +rent()
+        +returnVehicle()
     }
 
     class Economy {
@@ -60,16 +62,24 @@ classDiagram
     class Customer {
         -id: String
         -name: String
+        -surname: String
+        -email: String
+        -password: String
         -loyaltyTier: String
         +getDiscountRate() double
     }
 
     class Reservation {
         -reservationId: String
+        -customer: Customer
+        -vehicle: Vehicle
         -days: int
         -totalPrice: double
         -insuranceType: String
         -insuranceDailyCost: double
+        -pickUpLocation: String
+        -returnLocation: String
+        -employee: String
         -DEPOSIT_AMOUNT: double
         +calculateFinalAmount() double
     }
@@ -83,6 +93,7 @@ classDiagram
 
     class Branch {
         -branchId: String
+        -branchName: String
         -city: String
     }
 

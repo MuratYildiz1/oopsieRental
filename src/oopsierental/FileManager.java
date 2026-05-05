@@ -15,6 +15,7 @@ public class FileManager {
     private static final String RESERVATION_FILE = "reservations.txt";
     private static final String BRANCH_FILE = "branches.txt";
     private static final String EMPLOYEE_FILE = "employees.txt";
+    private static final String MAINTENANCE_STATE_FILE = "maintenance_state.txt";
 
     public static void saveVehicles(ArrayList<Vehicle> vehicles) {
         try (PrintWriter writer = new PrintWriter(new FileWriter(VEHICLE_FILE))) {
@@ -28,6 +29,55 @@ public class FileManager {
             }
         } catch (IOException e) {
             System.err.println("File writing error: " + e.getMessage());
+        }
+    }
+
+    public static void saveMaintenanceState(ArrayList<Vehicle> vehicles, Map<String, String> unavailableReasons,
+            Map<String, String> assignedMechanics, Map<String, String> unavailableAddedBy,
+            Map<String, String> lastRentedBy) {
+        try (PrintWriter writer = new PrintWriter(new FileWriter(MAINTENANCE_STATE_FILE))) {
+            for (Vehicle v : vehicles) {
+                if (v.isUnderMaintenance()) {
+                    String reason = unavailableReasons.getOrDefault(v.getPlate(), "Maintenance");
+                    String mechanic = assignedMechanics.getOrDefault(v.getPlate(), "Pending");
+                    String admin = unavailableAddedBy.getOrDefault(v.getPlate(), "System");
+                    String renter = lastRentedBy.getOrDefault(v.getPlate(), "-");
+                    writer.println(v.getPlate() + "~" + reason + "~" + mechanic + "~" + admin + "~" + renter);
+                }
+            }
+        } catch (IOException e) {
+            System.err.println("Maintenance state saving error: " + e.getMessage());
+        }
+    }
+
+    public static void loadMaintenanceState(ArrayList<Vehicle> vehicles, Map<String, String> unavailableReasons,
+            Map<String, String> assignedMechanics, Map<String, String> unavailableAddedBy,
+            Map<String, String> lastRentedBy) {
+        try (BufferedReader br = new BufferedReader(new FileReader(MAINTENANCE_STATE_FILE))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                String[] parts = line.split("~");
+                if (parts.length < 4)
+                    continue;
+
+                String plate = parts[0];
+                String reason = parts[1];
+                String mechanic = parts[2];
+                String admin = parts[3];
+                String renter = parts.length >= 5 ? parts[4] : "-";
+
+                Vehicle v = vehicles.stream().filter(veh -> veh.getPlate().equals(plate)).findFirst().orElse(null);
+                if (v != null && v.isUnderMaintenance()) {
+                    unavailableReasons.put(plate, reason);
+                    assignedMechanics.put(plate, mechanic);
+                    unavailableAddedBy.put(plate, admin);
+                    if (!renter.equals("-")) {
+                        lastRentedBy.put(plate, renter);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            // If file is missing or malformed, ignore and use defaults.
         }
     }
 
@@ -171,14 +221,6 @@ public class FileManager {
         }
     }
 
-    public static void saveReservation(Reservation res) {
-        try (PrintWriter out = new PrintWriter(new FileWriter(RESERVATION_FILE, true))) {
-            out.println(res.toString());
-        } catch (IOException e) {
-            System.err.println("Reservation recording failed: " + e.getMessage());
-        }
-    }
-
     public static ArrayList<Customer> loadCustomers() {
         ArrayList<Customer> list = new ArrayList<>();
         try (BufferedReader br = new BufferedReader(new FileReader(CUSTOMER_FILE))) {
@@ -196,6 +238,66 @@ public class FileManager {
             }
         } catch (Exception e) {
             System.out.println("No registered customers yet or file could not be read.");
+        }
+        return list;
+    }
+
+    // MODIFIED: Saves the reservation in a parsable CSV format instead of
+    // toString()
+    public static void saveReservation(Reservation res) {
+        try (PrintWriter out = new PrintWriter(new FileWriter(RESERVATION_FILE, true))) {
+            // Note: If 'getInsuranceDailyCost()' is underlined in red, change it to match
+            // the getter in your Reservation.java
+            out.println(res.getReservationId() + "," +
+                    res.getCustomer().getId() + "," +
+                    res.getVehicle().getPlate() + "," +
+                    res.getDays() + "," +
+                    res.getInsuranceType() + "," +
+                    res.getInsuranceDailyCost() + "," +
+                    res.getReturnLocation() + "," +
+                    res.getEmployee());
+        } catch (Exception e) {
+            System.err.println("Reservation recording failed: " + e.getMessage());
+        }
+    }
+
+    // NEW ADDITION: Safely loads active reservations on system startup
+    public static ArrayList<Reservation> loadReservations(ArrayList<Customer> customers, ArrayList<Vehicle> vehicles) {
+        ArrayList<Reservation> list = new ArrayList<>();
+        try (BufferedReader br = new BufferedReader(new FileReader(RESERVATION_FILE))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                String[] data = line.split(",");
+                // If it encounters the old format (toString), it skips safely
+                if (data.length < 8)
+                    continue;
+
+                String resId = data[0];
+                String customerId = data[1];
+                String plate = data[2];
+                int days = Integer.parseInt(data[3]);
+                String insType = data[4];
+                int insDailyCost = (int) Double.parseDouble(data[5]);
+                String returnCity = data[6];
+                String employee = data[7];
+
+                Customer c = customers.stream().filter(cust -> cust.getId().equals(customerId)).findFirst()
+                        .orElse(null);
+                Vehicle v = vehicles.stream().filter(veh -> veh.getPlate().equals(plate)).findFirst().orElse(null);
+
+                // Smart Logic: Only load the reservation if the vehicle's status is ACTUALLY
+                // "rented"
+                if (c != null && v != null && v.isRented()) {
+                    Reservation res = new Reservation(resId, c, v, days, insType, insDailyCost, returnCity, employee,
+                            true);
+
+                    // Overwrite if multiple records exist for the same car (keep the latest)
+                    list.removeIf(r -> r.getVehicle().getPlate().equals(v.getPlate()));
+                    list.add(res);
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("No active reservations found or format changed.");
         }
         return list;
     }

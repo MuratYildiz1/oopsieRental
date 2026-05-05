@@ -8,12 +8,12 @@ flowchart LR
     subgraph OOPSIE_RENTAL_SYSTEM
         UC1((Login / Register))
         UC2((View Cars & Apply Filters))
-        UC3((Create Reservation Rent))
+        UC3((Create Reservation / Rent Car))
         UC4((Process Return & Generate Invoice))
-        UC5((Send Car to Maintenance))
-        UC6((Resolve Maintenance Add Notes))
+        UC5((Mark Vehicle as Unavailable))
+        UC6((Resolve Maintenance & Add Notes))
         UC7((View Maintenance History))
-        UC8((Calculate Deductions & Refund))
+        UC8((Register Employee))
     end
 
     agent --> UC1
@@ -30,5 +30,6 @@ flowchart LR
     admin --> UC1
     admin --> UC2
     admin --> UC7
+    admin --> UC8
 
-    UC4 -.->|<<includes>>| UC8
+    UC4 -.->|<<includes>>| UC7

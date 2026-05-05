@@ -1,4 +1,7 @@
-34-XYZ-999~Porsche Cayenne~Crash~kazim~camurluk degisimi~Kerem Halis Kardes
-35-EGE-35~BMW 320i~Maintenance~Kazim~yag degisimi~Kerem Halis Kardes
-34-IST-003~Audi A6~Crash~Ulas~yag degisimi~Kerem Halis Kardes
 
+
+34-IST-003~Audi A6~Maintenance~Pending~yag degisimi ve periyodik bakim - 3000TL~Kerem Halis Kardes
+34-IST-001~BMW 520i~Maintenance~Pending~-~admin admin
+07-ANT-402~Seat Ibiza~Maintenance~Pending~-~admin admin
+34-IST-001~BMW 520i~Maintenance~Kemal Tamir~-~admin admin
+06-ANK-301~Ford Transit~Crash~Hasan Usta~-~admin admin

@@ -23,3 +23,5 @@ Mechanic,30000000007,Yavuz Boya,yavuz.boya@oopsie.com,123,BR-45
 Mechanic,30000000008,Sinan Egzoz,sinan.egzoz@oopsie.com,123,BR-16
 Mechanic,30000000009,Riza Conta,riza.conta@oopsie.com,123,BR-01
 Mechanic,30000000010,Mahmut Buji,mahmut.buji@oopsie.com,123,BR-25
+RentalAgent,12332112345,Kerem Halis Kardes,keremkardes@oopsie.com,123,BR-01
+RentalAgent,11111100000,admin admin,admin@oopsie.com,123,BR-01

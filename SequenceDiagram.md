@@ -1,37 +1,30 @@
 ```mermaid
 
 sequenceDiagram
-    actor Agent as RentalAgent GUI_User
+    actor User as Rental Agent
     participant GUI as RentalGUI
-    participant Logic as RentalAgent Domain
     participant Veh as Vehicle
     participant Inv as Invoice
     participant DB as FileManager
 
-    Agent->>GUI: Click Process Return
+    User->>GUI: Click Process Return
     GUI->>GUI: populateReturnDetails()
-    GUI->>Logic: processReturn(reservation, km, damage, washing, missing)
-    activate Logic
-    Logic->>Veh: addMileage(km)
+    GUI->>GUI: processReturnAction()
+    GUI->>Veh: setBranch(dropoffCity)
+    GUI->>Veh: setRented(false)
+    GUI->>Veh: setRentedDays(0)
 
     alt hasDamage == true
-        Logic->>Veh: setUnderMaintenance(true)
+        GUI->>Veh: setUnderMaintenance(true)
     else hasDamage == false
-        Logic->>Veh: setUnderMaintenance(false)
+        GUI->>Veh: setUnderMaintenance(false)
     end
 
-    Logic->>Veh: setRented(false)
-    Logic->>Veh: setRentedDays(0)
-
-    Logic->>Inv: new Invoice(reservation, washing, missing)
+    GUI->>Inv: new Invoice(reservation, washing, missing)
     activate Inv
-    Inv-->>Logic: finalInvoice
+    Inv-->>GUI: finalInvoice
     deactivate Inv
 
-    Logic-->>GUI: return finalInvoice
-    deactivate Logic
-    
     GUI->>DB: saveInvoice(finalInvoice)
-    GUI->>Veh: setBranch(dropoffCity)
     GUI->>DB: saveVehicles(vehicles)
-    GUI->>Agent: Show Invoice Summary
+    GUI-->>User: Show Invoice Summary

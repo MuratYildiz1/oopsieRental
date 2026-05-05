@@ -7,6 +7,8 @@ stateDiagram-v2
     Rented --> Available : processReturn() [hasDamage = false]
     
     Rented --> UnderMaintenance : processReturn() [hasDamage = true]
-    Available --> UnderMaintenance : markUnavailable() [Sent to Mechanic]
+    Rented --> UnderMaintenance : addCarToUnavailable() [Mark Rented Car Unavailable]
+    Available --> UnderMaintenance : addCarToUnavailable() [Mark Available Car Unavailable]
     
     UnderMaintenance --> Available : resolveUnavailableCar() [Mechanic Notes Added]
+```

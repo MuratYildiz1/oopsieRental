@@ -17,10 +17,12 @@ public class Reservation {
     private double insuranceDailyCost;
     private String pickUpLocation;
     private String returnLocation;
+    private String employee;
     private final double DEPOSIT_AMOUNT = 5000.0;
 
     public Reservation(String reservationId, Customer customer, Vehicle vehicle, int days,
-            String insuranceType, double insuranceDailyCost, String returnLocation) throws RentalException {
+            String insuranceType, double insuranceDailyCost, String returnLocation, String employee)
+            throws RentalException {
         this.reservationId = reservationId;
         this.customer = customer;
         this.vehicle = vehicle;
@@ -29,12 +31,30 @@ public class Reservation {
         this.insuranceDailyCost = insuranceDailyCost;
         this.pickUpLocation = vehicle.getBranch().getCity();
         this.returnLocation = returnLocation;
+        this.employee = employee;
 
         checkAvailability();
 
         this.totalPrice = calculateFinalAmount();
         vehicle.setRented(true);
         vehicle.setRentedDays(days);
+    }
+
+    // Constructor for loading from file (skips availability check)
+    public Reservation(String reservationId, Customer customer, Vehicle vehicle, int days,
+            String insuranceType, int insuranceDailyCost, String returnLocation, String employee, boolean isLoading) {
+        this.reservationId = reservationId;
+        this.customer = customer;
+        this.vehicle = vehicle;
+        this.days = days;
+        this.insuranceType = insuranceType;
+        this.insuranceDailyCost = insuranceDailyCost;
+        this.pickUpLocation = vehicle.getBranch().getCity();
+        this.returnLocation = returnLocation;
+        this.employee = employee;
+
+        this.totalPrice = calculateFinalAmount();
+        // Do not set vehicle rented here, as it's already set in loadVehicles
     }
 
     public void checkAvailability() throws RentalException {
@@ -83,6 +103,10 @@ public class Reservation {
 
     public String getReturnLocation() {
         return returnLocation;
+    }
+
+    public String getEmployee() {
+        return employee;
     }
 
     public double getDepositAmount() {
