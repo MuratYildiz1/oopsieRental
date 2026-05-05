@@ -5,7 +5,7 @@ flowchart LR
     mechanic[Mechanic]
     admin[System Admin / Manager]
 
-    subgraph OOPSIE_RENTAL_SYSTEM
+    subgraph "OOPSIE RENTAL SYSTEM"
         UC1((Login / Register))
         UC2((View Cars & Apply Filters))
         UC3((Create Reservation / Rent Car))
@@ -33,3 +33,4 @@ flowchart LR
     admin --> UC8
 
     UC4 -.->|<<includes>>| UC7
+    UC6 -.->|<<extends>>| UC7

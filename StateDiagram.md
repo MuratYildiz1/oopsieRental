@@ -1,14 +1,35 @@
 ```mermaid
 
-stateDiagram-v2
-    [*] --> Available : System Initialization
+graph TD
+    Start(("●<br/>Initial Node"))
     
-    Available --> Rented : rent() [Reservation Created]
-    Rented --> Available : processReturn() [hasDamage = false]
+    Start --> AvailableState["📍 Available<br/>(Waiting for Rental)"]
     
-    Rented --> UnderMaintenance : processReturn() [hasDamage = true]
-    Rented --> UnderMaintenance : addCarToUnavailable() [Mark Rented Car Unavailable]
-    Available --> UnderMaintenance : addCarToUnavailable() [Mark Available Car Unavailable]
+    AvailableState --> RentalDecision{"Customer<br/>Requests Rent?"}
+    RentalDecision -->|Yes| CreateReservation["Create Reservation<br/>rent()"]
+    RentalDecision -->|No| MarkUnavailableDecision1{"Mark as<br/>Unavailable?"}
     
-    UnderMaintenance --> Available : resolveUnavailableCar() [Mechanic Notes Added]
+    CreateReservation --> RentedState["📍 Rented<br/>(In Use)"]
+    
+    RentedState --> ReturnDecision{"Process<br/>Return"}
+    ReturnDecision -->|hasDamage = true| SetMaintenance1["setUnderMaintenance(true)<br/>processReturn()"]
+    ReturnDecision -->|hasDamage = false| ReturnToAvailable["setRented(false)<br/>setRentedDays(0)"]
+    
+    MarkUnavailableDecision1 -->|Yes| SetMaintenance2["addCarToUnavailable()"]
+    MarkUnavailableDecision1 -->|No| AvailableState
+    
+    SetMaintenance1 --> UnderMaintenanceState["📍 UnderMaintenance<br/>(Maintenance In Progress)"]
+    SetMaintenance2 --> UnderMaintenanceState
+    
+    ReturnToAvailable --> AvailableState
+    
+    UnderMaintenanceState --> ResolveDecision{"Maintenance<br/>Complete?"}
+    ResolveDecision -->|Yes| ResolveMaintenance["resolveUnavailableCar()<br/>setUnderMaintenance(false)"]
+    ResolveDecision -->|No| UnderMaintenanceState
+    
+    ResolveMaintenance --> AvailableState
+    
+    AvailableState --> EndDecision{"Shutdown?"}
+    EndDecision -->|Yes| End(("◎<br/>Final Node"))
+    EndDecision -->|No| AvailableState
 ```
